@@ -1,0 +1,19 @@
+# Shared defaults. Spike configs `extends: base.yaml` and override what they need.
+seed: 1337
+device: cuda            # auto-falls back to cpu if CUDA is unavailable
+experiments_root: experiments
+
+data:
+  # Point this at your downloaded NIH ChestX-ray14 root. NOT committed.
+  # Windows path with spaces is fine, e.g.: "C:/Users/gokul D/data/nih_chestxray14"
+  nih_root: ""
+  site2_root: ""        # optional second site (V6)
+  image_size: 224
+
+train:
+  target_pathology: Pneumothorax
+  batch_size: 32
+  epochs: 5
+  lr: 0.0001
+  backbone: densenet121
+  amp: true             # mixed precision — fits the RTX 3050 (6GB)

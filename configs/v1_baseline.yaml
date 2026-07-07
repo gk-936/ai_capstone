@@ -1,0 +1,10 @@
+# V1 — pipeline sanity: train a baseline classifier end-to-end on NIH for one pathology.
+# PASS = sane in-distribution AUC (sanity, not SOTA). Modelling code lands only after Phase 0.
+extends: base.yaml
+
+spike: v1_baseline
+
+train:
+  target_pathology: Pneumothorax
+  epochs: 5
+  batch_size: 32

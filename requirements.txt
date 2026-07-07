@@ -1,0 +1,26 @@
+# Core DL stack — install torch matching your CUDA build separately if needed:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+torch
+torchvision
+timm
+grad-cam            # pytorch-grad-cam (V3 attribution)
+
+# Data / metrics
+numpy
+pandas
+scikit-learn        # AUC and classification metrics
+pillow
+
+# Config / reproducibility
+pydantic>=2
+pyyaml
+
+# Plotting / reporting
+matplotlib
+
+# Dev
+pytest
+ruff
+
+# NOTE: the open-weight VLM used in V4 (e.g. Qwen2-VL / LLaVA) is installed ONLY
+# inside the Colab/Kaggle notebook, not here — it will not fit on a 6GB local GPU.

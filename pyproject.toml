@@ -1,0 +1,23 @@
+[project]
+name = "auditor"
+version = "0.1.0"
+description = "Spurious-Correlation Auditor for Chest X-ray Classifiers"
+requires-python = ">=3.9"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

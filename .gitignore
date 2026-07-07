@@ -1,0 +1,37 @@
+# Data & artifacts — never commit images, checkpoints, or run outputs
+data/
+experiments/
+*.pth
+*.pt
+*.ckpt
+*.onnx
+crops/
+predictions.jsonl
+
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
