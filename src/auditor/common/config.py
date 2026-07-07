@@ -19,7 +19,12 @@ from pydantic import BaseModel, Field
 
 class DataConfig(BaseModel):
     # Dataset roots are config values, resolved at load time. A second site plugs in here.
-    nih_root: str = Field(default="", description="Path to NIH ChestX-ray14 root folder.")
+    nih_root: str = Field(default="", description="Folder holding NIH CSVs + split files.")
+    nih_images: str = Field(default="", description="Folder holding the 224px PNG images.")
+    labels_csv: str = Field(default="", description="Path to Data_Entry_2017.csv.")
+    train_val_list: str = Field(default="", description="Official train/val split list.")
+    test_list: str = Field(default="", description="Official test split list.")
+    bbox_csv: str = Field(default="", description="Bounding-box CSV (region GT for V3).")
     site2_root: str = Field(default="", description="Optional second-site root (V6).")
     image_size: int = 224
 

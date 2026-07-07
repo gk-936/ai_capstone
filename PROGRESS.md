@@ -7,7 +7,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 - [x] folder structure ............................... PASS
 - [x] CLAUDE.md + PROGRESS.md committed ............... PASS
 - [x] reproducibility skeleton (config, seeds, logger) PASS (11 tests pass)
-- [ ] NIH ChestX-ray14 obtained (path in config) ..... TODO (next task)
+- [x] NIH ChestX-ray14 obtained (path in config) ..... PASS (112,120 imgs @224px; paths verified)
 - [ ] literature map drafted (CO1) ................... TODO
 
 ## Phase 1 — Validation gauntlet (gated; STOP after each spike)

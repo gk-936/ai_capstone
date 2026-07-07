@@ -4,9 +4,13 @@ device: cuda            # auto-falls back to cpu if CUDA is unavailable
 experiments_root: experiments
 
 data:
-  # Point this at your downloaded NIH ChestX-ray14 root. NOT committed.
-  # Windows path with spaces is fine, e.g.: "C:/Users/gokul D/data/nih_chestxray14"
-  nih_root: ""
+  # NIH ChestX-ray14, 224x224 resized (Kaggle khanfashee). NOT committed (gitignored).
+  nih_root: "data"                       # folder holding the CSVs + split files
+  nih_images: "data/images-224/images-224"  # note: archive double-nests the image folder
+  labels_csv: "data/Data_Entry_2017.csv"
+  train_val_list: "data/train_val_list_NIH.txt"
+  test_list: "data/test_list_NIH.txt"
+  bbox_csv: "data/BBox_List_2017_Official_NIH.csv"  # region GT, useful for V3
   site2_root: ""        # optional second site (V6)
   image_size: 224
 
