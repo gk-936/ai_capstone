@@ -15,7 +15,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | Spike | Question | Threshold | Status | Measured | Notes |
 |-------|----------|-----------|--------|----------|-------|
 | V1  | Trains end-to-end, sane AUC? | sane ID AUC (>=0.75) | **PASS** | test AUC **0.8448** (val 0.8269) | full data (73k/13k/25.6k), DenseNet-121, 5 ep, batch 16 @224px; in NIH Pneumothorax lit range 0.80–0.85; patient-disjoint verified; monotone learning curve |
-| V2  | Model measurably cheats? | reliance gap >20pp | TODO | — | |
+| V2  | Model measurably cheats? | reliance gap >20pp | **PASS** | **gap 44pp** (aligned .94 / removed .50 / flipped .05) | corner tag p=.95, 3 ep; acc_removed=0.500 = pure-shortcut fingerprint (pre-validated); monotone collapse; tag-free AUC dropped 0.84->0.74 as expected |
 | V3  | Saliency localizes confound? | >80% of positive crops | TODO | — | |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | TODO | — | proves METHOD; fail = fix pipeline, not pivot |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | TODO | — | CRITICAL GATE; fail (after V4a pass) = pivot |
@@ -57,3 +57,6 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
   "Memory allocation failure" at the AdamW step to VRAM peak on the 6GB laptop GPU (shares memory
   with display); fixed by default batch_size 32->16 (expandable_segments unsupported on Windows,
   no-ops). Bumped torch AMP API to torch.amp.*.
+- 2026-07-08 — V2 PASS: reliance gap 44pp (aligned .94 / removed .50 / flipped .05). acc_removed
+  landing exactly at 0.500 matches the pure-shortcut fingerprint pre-validated with a synthetic
+  tag-detector model before the run — real reliance, not leakage.
