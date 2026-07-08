@@ -46,17 +46,31 @@ def _cmd_export(args) -> None:
     logger.info(f"DONE export: {metrics}")
 
 
+def _cmd_export_tube(args) -> None:
+    from auditor.common.config import load_config
+    from auditor.common.run_logger import RunLogger
+    from auditor.discovery.export_tube_crops import export_tube_crops
+
+    cfg = load_config(args.config, overrides=args.override)
+    logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
+    metrics = export_tube_crops(cfg, logger, checkpoint=args.checkpoint)
+    logger.info(f"DONE export-tube: {metrics}")
+
+
 def _cmd_score(args) -> None:
     from auditor.discovery.score_naming import load_and_score
 
-    metrics = load_and_score(args.manifest, args.predictions)
+    metrics = load_and_score(args.manifest, args.predictions, confound=args.confound)
     print(json.dumps(metrics, indent=2))
+    # V4a (tag): P>=.90, R>=.90.  V4b (tube): P>=.80, R>=.70.  Both: hallucination <.10.
+    p_bar, r_bar = (0.90, 0.90) if args.confound == "tag" else (0.80, 0.70)
     gate = (
-        metrics["precision"] >= 0.90
-        and metrics["recall"] >= 0.90
+        metrics["precision"] >= p_bar
+        and metrics["recall"] >= r_bar
         and metrics["control_hallucination"] < 0.10
     )
-    print(f"\nV4a gate (P>=.90 & R>=.90 & halluc<.10): {'PASS' if gate else 'FAIL'}")
+    tag = "V4a" if args.confound == "tag" else "V4b"
+    print(f"\n{tag} gate (P>={p_bar} & R>={r_bar} & halluc<.10): {'PASS' if gate else 'FAIL'}")
 
 
 def _cmd_list_models(args) -> None:
@@ -85,6 +99,12 @@ def main() -> None:
     pe.add_argument("--override", action="append", default=[])
     pe.set_defaults(func=_cmd_export)
 
+    pt = sub.add_parser("export-tube", help="V4b: export tube crops + manifest (needs V4b ckpt).")
+    pt.add_argument("--config", required=True)
+    pt.add_argument("--checkpoint", required=True, help="V4b tube-reliant model checkpoint.")
+    pt.add_argument("--override", action="append", default=[])
+    pt.set_defaults(func=_cmd_export_tube)
+
     pl = sub.add_parser("list-models", help="List Groq model ids (to pick a vision model).")
     pl.set_defaults(func=_cmd_list_models)
 
@@ -99,6 +119,8 @@ def main() -> None:
     ps = sub.add_parser("score", help="Score predictions.jsonl against manifest.json.")
     ps.add_argument("--manifest", required=True)
     ps.add_argument("--predictions", required=True)
+    ps.add_argument("--confound", choices=["tag", "tube"], default="tag",
+                    help="Which matcher: 'tag' (V4a) or 'tube' (V4b).")
     ps.set_defaults(func=_cmd_score)
 
     args = parser.parse_args()

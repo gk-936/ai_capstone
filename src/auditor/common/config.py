@@ -25,6 +25,7 @@ class DataConfig(BaseModel):
     train_val_list: str = Field(default="", description="Official train/val split list.")
     test_list: str = Field(default="", description="Official test split list.")
     bbox_csv: str = Field(default="", description="Bounding-box CSV (region GT for V3).")
+    tube_csv: str = Field(default="", description="NEATX chest-tube annotations CSV (V4b).")
     site2_root: str = Field(default="", description="Optional second-site root (V6).")
     image_size: int = 224
 
@@ -74,6 +75,7 @@ class Config(BaseModel):
     device: str = "cuda"  # falls back to cpu via resolve_device() if unavailable
     spike: str = "unnamed"
     experiments_root: str = "experiments"
+    tube_train_enrich: float = 0.9  # V4b: fraction of TRAIN PTX-positives carrying a tube
     data: DataConfig = Field(default_factory=DataConfig)
     train: TrainConfig = Field(default_factory=TrainConfig)
     shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)

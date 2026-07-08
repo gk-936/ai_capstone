@@ -27,10 +27,21 @@ def main() -> None:
         "--cap-train", type=int, default=None, help="Cap train images/epoch (speed)."
     )
     parser.add_argument("--cap-val", type=int, default=None, help="Cap val images.")
+    parser.add_argument(
+        "--v4b", action="store_true",
+        help="Train the V4b tube-reliant pneumothorax model (NEATX tube-enriched split).",
+    )
     args = parser.parse_args()
 
     cfg = load_config(args.config, overrides=args.override)
     logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
+
+    if args.v4b:
+        from auditor.train.tube_train import train_v4b
+
+        metrics = train_v4b(cfg, logger, train_enrich=cfg.tube_train_enrich)
+        logger.info(f"DONE: {metrics}")
+        return
 
     max_per_split = None
     if args.smoke:

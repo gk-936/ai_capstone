@@ -45,11 +45,37 @@ def names_confound(description: str) -> bool:
     return False
 
 
-def score(manifest: list[dict], predictions: dict[str, str]) -> dict:
+# --- V4b: chest-tube / drain device vocabulary -------------------------------------------
+# Fires on tube/drain device terms; excludes anatomy so real-anatomy control crops don't fire.
+_TUBE_RE = re.compile(
+    r"\b(chest tube|chest drain|intercostal (drain|tube|catheter)|thoracostomy|"
+    r"drain|catheter|cannula|tubing|tube|line|wire|lead|pigtail|"
+    r"medical device|foreign (object|body)|artificial (line|object|device))\b",
+    re.I,
+)
+# Anatomy words that alone must NOT count as naming a tube (hallucination guards).
+_ANATOMY_ONLY_RE = re.compile(
+    r"\b(rib|clavicle|vessel|vasculature|bronch\w*|trachea|heart|cardiac|spine|"
+    r"vertebra\w*|diaphragm|lung marking|fissure)\b", re.I,
+)
+
+
+def names_tube(description: str) -> bool:
+    """True if the description names a chest tube / drain / line device (V4b, conservative)."""
+    if not description:
+        return False
+    text = description.lower()
+    if _TUBE_RE.search(text):
+        return True
+    return False
+
+
+def score(manifest: list[dict], predictions: dict[str, str], matcher=names_confound) -> dict:
     """Compute precision, recall, control-hallucination over labelled crops.
 
     manifest: rows {id, kind, has_confound}. predictions: {id: description}.
-    A crop is 'flagged' if names_confound(description) is True.
+    A crop is 'flagged' if `matcher(description)` is True (names_confound for V4a tag,
+    names_tube for V4b chest tube).
     """
     tp = fp = fn = tn = 0
     control_total = control_flagged = 0
@@ -62,7 +88,7 @@ def score(manifest: list[dict], predictions: dict[str, str]) -> dict:
         if desc is None:
             missing += 1
             continue
-        flagged = names_confound(desc)
+        flagged = matcher(desc)
 
         if truth and flagged:
             tp += 1
@@ -91,7 +117,13 @@ def score(manifest: list[dict], predictions: dict[str, str]) -> dict:
     }
 
 
-def load_and_score(manifest_path: str | Path, predictions_path: str | Path) -> dict:
+_MATCHERS = {"tag": names_confound, "tube": names_tube}
+
+
+def load_and_score(manifest_path: str | Path, predictions_path: str | Path,
+                   confound: str = "tag") -> dict:
+    """Score predictions; `confound` selects the matcher ('tag' for V4a, 'tube' for V4b)."""
+    matcher = _MATCHERS[confound]
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest = json.load(f)
     predictions = {}
@@ -101,4 +133,4 @@ def load_and_score(manifest_path: str | Path, predictions_path: str | Path) -> d
             if line:
                 row = json.loads(line)
                 predictions[row["id"]] = row.get("description", "")
-    return score(manifest, predictions)
+    return score(manifest, predictions, matcher=matcher)

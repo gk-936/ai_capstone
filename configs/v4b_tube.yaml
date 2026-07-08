@@ -1,0 +1,23 @@
+# V4b — real device confound (chest tube). Train a tube-reliant pneumothorax model, then
+# audit: does Grad-CAM localize the tube and can a VLM NAME it blindly?
+# PASS (pivot gate): precision>=.80 & recall>=.70, control-hallucination<.10.
+extends: base.yaml
+
+spike: v4b_tube
+
+train:
+  target_pathology: Pneumothorax
+  epochs: 4
+  batch_size: 16
+
+# tube-enrichment of TRAIN positives (fraction carrying a tube) — induces the shortcut
+tube_train_enrich: 0.9
+
+attribution:
+  target_layer: features.norm5
+  crop_size: 64          # real tubes are thin/spread — larger crop than the synthetic tag
+
+discovery:
+  crop_size: 64
+  n_positive: 100        # salient crops from tube-positive PTX images
+  n_control: 100         # crops from tube-negative images (confound-free)

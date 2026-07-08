@@ -31,6 +31,21 @@ def peak_in_region(saliency: np.ndarray, box: Box) -> bool:
     return bool((y0 <= peak_y < y1) and (x0 <= peak_x < x1))
 
 
+def peak_on_side(saliency: np.ndarray, side: str) -> bool:
+    """V4b coarse localization: does the saliency peak fall on the annotated side?
+
+    side is 'L'/'R'/'BOTH' as in NEATX. NOTE the radiological convention: the patient's LEFT
+    ('L') appears on the RIGHT of the image. 'BOTH' or unknown -> not scored (returns None).
+    """
+    if side not in ("L", "R"):
+        return None  # BOTH / NaN — not a clean single-side check
+    _, w = saliency.shape
+    peak_x = int(np.unravel_index(int(np.argmax(saliency)), saliency.shape)[1])
+    on_image_right = peak_x >= w / 2
+    # Patient L -> image right; patient R -> image left.
+    return on_image_right if side == "L" else (not on_image_right)
+
+
 def mass_fraction(saliency: np.ndarray, box: Box) -> float:
     """Fraction of total saliency mass inside `box` (supporting metric, not the gate)."""
     y0, x0, y1, x1 = box

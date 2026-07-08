@@ -11,6 +11,7 @@ data:
   train_val_list: "data/train_val_list_NIH.txt"
   test_list: "data/test_list_NIH.txt"
   bbox_csv: "data/BBox_List_2017_Official_NIH.csv"  # region GT, useful for V3
+  tube_csv: "data/neatx/NIH-CX14_TubeAnnotations_NonExperts_aggregated.csv"  # V4b tube labels
   site2_root: ""        # optional second site (V6)
   image_size: 224
 
