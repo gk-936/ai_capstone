@@ -8,7 +8,7 @@ spike: v4a_naming
 discovery:
   checkpoint: "experiments/v2_shortcut/20260708_060719_0515dc/artifacts/model_best.pth"
   target_layer: features.norm5
-  crop_size: 64
+  crop_size: 32          # tag (20px) fills ~40% of the crop — salient, still peak-centered
   n_positive: 100
   n_control: 100
   # out_dir left blank -> written under this run's artifacts/ (crops/ + manifest.json)
