@@ -48,6 +48,16 @@ class ShortcutConfig(BaseModel):
     seed: int = 1337          # seeds the deterministic per-image tag decision
 
 
+class AttributionConfig(BaseModel):
+    """V3 attribution/localization settings."""
+
+    checkpoint: str = ""       # path to the trained (V2) checkpoint to attribute over
+    target_layer: str = "features.norm5"
+    n_images: int = 200
+    crop_size: int = 64
+    n_export: int = 10         # how many heatmap overlays / crops to save as artifacts
+
+
 class Config(BaseModel):
     seed: int = 1337
     device: str = "cuda"  # falls back to cpu via resolve_device() if unavailable
@@ -56,6 +66,7 @@ class Config(BaseModel):
     data: DataConfig = Field(default_factory=DataConfig)
     train: TrainConfig = Field(default_factory=TrainConfig)
     shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)
+    attribution: AttributionConfig = Field(default_factory=AttributionConfig)
 
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:

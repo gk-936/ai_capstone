@@ -16,7 +16,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 |-------|----------|-----------|--------|----------|-------|
 | V1  | Trains end-to-end, sane AUC? | sane ID AUC (>=0.75) | **PASS** | test AUC **0.8448** (val 0.8269) | full data (73k/13k/25.6k), DenseNet-121, 5 ep, batch 16 @224px; in NIH Pneumothorax lit range 0.80–0.85; patient-disjoint verified; monotone learning curve |
 | V2  | Model measurably cheats? | reliance gap >20pp | **PASS** | **gap 44pp** (aligned .94 / removed .50 / flipped .05) | corner tag p=.95, 3 ep; acc_removed=0.500 = pure-shortcut fingerprint (pre-validated); monotone collapse; tag-free AUC dropped 0.84->0.74 as expected |
-| V3  | Saliency localizes confound? | >80% of positive crops | TODO | — | |
+| V3  | Saliency localizes confound? | >80% of positive crops | **PASS** | **tagged peak-in-box 100%** (control untagged 0.5%) | Grad-CAM on V2 ckpt, 200 imgs, layer features.norm5; control near-zero proves saliency follows the TAG not the corner; mass-frac 0.14 in a 0.8%-area box |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | TODO | — | proves METHOD; fail = fix pipeline, not pivot |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | TODO | — | CRITICAL GATE; fail (after V4a pass) = pivot |
 | V5  | Mitigation recovers accuracy? | worst-group up, ID stable | TODO | — | |
@@ -60,3 +60,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 - 2026-07-08 — V2 PASS: reliance gap 44pp (aligned .94 / removed .50 / flipped .05). acc_removed
   landing exactly at 0.500 matches the pure-shortcut fingerprint pre-validated with a synthetic
   tag-detector model before the run — real reliance, not leakage.
+- 2026-07-08 — V3 PASS: Grad-CAM peak-in-tag-box 100% on tagged positives vs 0.5% on the same
+  images untagged. The near-zero untagged control proves saliency tracks the tag, not the corner.
+  Attribution code built confound-region-agnostic (generic box) so it reuses for the real device
+  confound later. V3 checkpoint dependency: the V2 model_best.pth.

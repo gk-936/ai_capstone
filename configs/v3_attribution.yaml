@@ -1,0 +1,13 @@
+# V3 — attribution localizes the confound. Run Grad-CAM on the V2-cheating model over tagged
+# positives and confirm the saliency peak lands on the injected tag. PASS = peak-in-box >80%.
+extends: v2_shortcut.yaml
+
+spike: v3_attribution
+
+attribution:
+  # The V2 checkpoint to attribute over (the model that provably relies on the tag).
+  checkpoint: "experiments/v2_shortcut/20260708_060719_0515dc/artifacts/model_best.pth"
+  target_layer: features.norm5
+  n_images: 200
+  crop_size: 64
+  n_export: 12
