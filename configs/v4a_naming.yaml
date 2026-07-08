@@ -1,0 +1,14 @@
+# V4a — VLM names the synthetic confound (critical gate). Export saliency crops from the
+# V2-cheating model (positives contain the tag) + confound-free control crops, for an
+# open-weight VLM on Colab to name blindly. PASS = precision>=.90 & recall>=.90, halluc<10%.
+extends: v3_attribution.yaml
+
+spike: v4a_naming
+
+discovery:
+  checkpoint: "experiments/v2_shortcut/20260708_060719_0515dc/artifacts/model_best.pth"
+  target_layer: features.norm5
+  crop_size: 64
+  n_positive: 100
+  n_control: 100
+  # out_dir left blank -> written under this run's artifacts/ (crops/ + manifest.json)

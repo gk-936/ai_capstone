@@ -58,6 +58,17 @@ class AttributionConfig(BaseModel):
     n_export: int = 10         # how many heatmap overlays / crops to save as artifacts
 
 
+class DiscoveryConfig(BaseModel):
+    """V4 VLM-naming settings (crop export + scoring; the VLM itself runs on Colab)."""
+
+    checkpoint: str = ""       # trained (V2) checkpoint whose saliency drives the crops
+    target_layer: str = "features.norm5"
+    crop_size: int = 64
+    n_positive: int = 100      # salient crops from tagged positive images (contain the tag)
+    n_control: int = 100       # crops from untagged images (confound-free)
+    out_dir: str = ""          # where crops/ + manifest.json are written (default: run artifacts)
+
+
 class Config(BaseModel):
     seed: int = 1337
     device: str = "cuda"  # falls back to cpu via resolve_device() if unavailable
@@ -67,6 +78,7 @@ class Config(BaseModel):
     train: TrainConfig = Field(default_factory=TrainConfig)
     shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)
     attribution: AttributionConfig = Field(default_factory=AttributionConfig)
+    discovery: DiscoveryConfig = Field(default_factory=DiscoveryConfig)
 
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
