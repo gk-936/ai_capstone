@@ -10,14 +10,23 @@ present it and stop, do not improvise.
 
 ## Data
 NEATX NIH tube annotations (`data/neatx/NIH-CX14_TubeAnnotations_NonExperts_aggregated.csv`):
-3,543 images, 1,637 tube-positive / 1,906 negative, side label (L/R/BOTH). Images already in
-the NIH folder. Non-expert labels (2 data-science students) — recorded as a limitation.
+3,543 images, 1,637 tube-positive, side label (L/R/BOTH). Images already in the NIH folder.
+Non-expert labels (2 data-science students) — recorded as a limitation.
+
+**Data reality (checked before building):** in NEATX, tube and pneumothorax are ~100% correlated
+(only 2 pneumothorax-negative images carry a tube annotation), because tubes were annotated on
+the pneumothorax subset. Among the full NIH pneumothorax-positives (5,298), **31% (1,636) carry
+an annotated chest tube**; pneumothorax-negatives essentially never do. So a *controllable*
+tube<->label correlation cannot be built. The measurable, scientifically stronger framing is the
+NATURAL shortcut below: the chest tube (a treatment device) is a spurious tell for pneumothorax.
 
 ## Pipeline (reuses V2->V3->V4a machinery)
-1. **Induce tube reliance** — train a Pneumothorax classifier on a biased split where tube
-   presence is strongly correlated with the positive label (real tubes as the confound; NEATX
-   labels define the correlation). Confirm a reliance gap (V2-style) BEFORE auditing; if reliance
-   is weak, strengthen the bias (attribution needs something real to find).
+1. **Induce tube reliance (natural shortcut)** — train a Pneumothorax classifier on a split where
+   TRAIN pneumothorax-positives are ENRICHED for tubes (e.g. 90% of train PTX-positives carry a
+   tube), so the model can shortcut "tube -> pneumothorax". Reliance gap = accuracy on
+   pneumothorax-positives WITH a tube vs WITHOUT a tube (held-out). A large gap means the model
+   leans on the device rather than the collapse. This is a real, documented clinical shortcut, not
+   an injected one. If reliance is weak, increase train enrichment before auditing.
 2. **Attribute** — Grad-CAM on tube-positive images (confound-region-agnostic code from V3).
    Localization check: does the saliency peak fall on the ANNOTATED side (L/R)? Report
    side-consistency. Export salient crops.
@@ -29,9 +38,10 @@ the NIH folder. Non-expert labels (2 data-science students) — recorded as a li
 
 ## Data flow
 ```
-NEATX labels -> biased split -> train tube-reliant PTX model -> reliance gap (confirm)
-  -> Grad-CAM on tube-pos -> side-consistency + salient crops
-  -> Groq blind naming: tube-pos vs tube-neg crops
+NEATX+NIH labels -> tube-enriched PTX train split -> train PTX model -> reliance gap
+   (acc on PTX+tube vs PTX+no-tube)
+  -> Grad-CAM on tube-positive PTX imgs -> side-consistency + salient crops
+  -> Groq blind naming: tube-positive crops vs tube-negative control crops
   -> tube matcher -> P / R / hallucination   (GATE)
 ```
 
