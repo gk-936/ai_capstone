@@ -57,6 +57,12 @@ def _cmd_export_tube(args) -> None:
     logger.info(f"DONE export-tube: {metrics}")
 
 
+def _cmd_name_ollama(args) -> None:
+    from auditor.discovery.name_ollama import name_all
+
+    name_all(args.crops, args.manifest, args.out, model=args.model, host=args.host)
+
+
 def _cmd_score(args) -> None:
     from auditor.discovery.score_naming import load_and_score
 
@@ -115,6 +121,14 @@ def main() -> None:
     pn.add_argument("--model", required=True, help="Groq vision model id (see list-models).")
     pn.add_argument("--throttle", type=float, default=0.0, help="Seconds to sleep between calls.")
     pn.set_defaults(func=_cmd_name_groq)
+
+    po = sub.add_parser("name-ollama", help="Name crops via a LOCAL Ollama vision model (no API).")
+    po.add_argument("--crops", required=True, help="Path to the crops/ folder.")
+    po.add_argument("--manifest", required=True)
+    po.add_argument("--out", required=True, help="Output predictions.jsonl path.")
+    po.add_argument("--model", required=True, help="Ollama vision tag (e.g. qwen2.5vl:3b).")
+    po.add_argument("--host", default="http://localhost:11434", help="Ollama host URL.")
+    po.set_defaults(func=_cmd_name_ollama)
 
     ps = sub.add_parser("score", help="Score predictions.jsonl against manifest.json.")
     ps.add_argument("--manifest", required=True)
