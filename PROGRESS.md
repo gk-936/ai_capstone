@@ -17,7 +17,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V1  | Trains end-to-end, sane AUC? | sane ID AUC (>=0.75) | **PASS** | test AUC **0.8448** (val 0.8269) | full data (73k/13k/25.6k), DenseNet-121, 5 ep, batch 16 @224px; in NIH Pneumothorax lit range 0.80–0.85; patient-disjoint verified; monotone learning curve |
 | V2  | Model measurably cheats? | reliance gap >20pp | **PASS** | **gap 44pp** (aligned .94 / removed .50 / flipped .05) | corner tag p=.95, 3 ep; acc_removed=0.500 = pure-shortcut fingerprint (pre-validated); monotone collapse; tag-free AUC dropped 0.84->0.74 as expected |
 | V3  | Saliency localizes confound? | >80% of positive crops | **PASS** | **tagged peak-in-box 100%** (control untagged 0.5%) | Grad-CAM on V2 ckpt, 200 imgs, layer features.norm5; control near-zero proves saliency follows the TAG not the corner; mass-frac 0.14 in a 0.8%-area box |
-| V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | TODO | — | proves METHOD; fail = fix pipeline, not pivot |
+| V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | TODO | — | CRITICAL GATE; fail (after V4a pass) = pivot |
 | V5  | Mitigation recovers accuracy? | worst-group up, ID stable | TODO | — | |
 | V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | TODO | — | |
@@ -64,3 +64,10 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
   images untagged. The near-zero untagged control proves saliency tracks the tag, not the corner.
   Attribution code built confound-region-agnostic (generic box) so it reuses for the real device
   confound later. V3 checkpoint dependency: the V2 model_best.pth.
+- 2026-07-08 — V4a PASS (CRITICAL GATE): Llama-4-Scout via Groq free API named the synthetic tag
+  from blind prompts. P 0.978 / R 0.90 / ctrl-halluc 0.02. Switched from planned Colab+Qwen2-VL to
+  Groq live endpoint (same file contract). Recall exactly at 0.90 (10 real VLM misses on an easy
+  confound) — foreshadows V4b will be harder. Keyword matcher was corrected during scoring
+  (FAIL 0.77 -> PASS 0.90) after auditing ALL 23 original misses: ~13 were the VLM saying
+  'rectangular/opaque white object' that the regex missed (real bug), the rest genuine VLM misses
+  kept in the denominator. Fix verified conservative (control-hallucination unchanged at 0.02).

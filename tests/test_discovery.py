@@ -12,8 +12,19 @@ def test_names_confound_hits_obvious_tag_descriptions():
         "I see an artificial rectangle, likely a label, in the corner.",
         "a whitish tag in the upper corner of the scan",
         "There appears to be a bright synthetic patch.",
+        # Adjective forms the VLM actually produced (matcher-fix regression guards):
+        "a large, rectangular, white object that appears artificial",
+        "a large, opaque, rectangular object in the upper left corner",
+        "a white rectangular object superimposed over the image",
+        "a large white rectangular object obscuring the anatomy",
     ]:
         assert names_confound(desc) is True, desc
+
+
+def test_obscured_without_brightness_does_not_fire():
+    # "obscured/cropped region" alone (no brightness cue) is ambiguous — must NOT fire, to
+    # protect the control-hallucination bar. Real tag-namings always carried a brightness word.
+    assert names_confound("a rectangular region that has been obscured or cropped out") is False
 
 
 # ------------------------- matcher: should NOT fire (hallucination guard) --------------

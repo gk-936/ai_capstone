@@ -16,10 +16,15 @@ import json
 import re
 from pathlib import Path
 
-# A marker-like OBJECT word (not generic anatomy/opacity).
-_OBJECT = r"(box|square|rectangle|marker|tag|label|patch|sticker|icon|logo|symbol)"
+# A marker-like OBJECT word (not generic anatomy/opacity). Includes adjective forms the VLM
+# actually uses ("rectangular"/"square-shaped") and the "obscured/blocked-out region" framing
+# it applies to the opaque white block.
+_OBJECT = (
+    r"(box|square|square-shaped|rectangle|rectangular|marker|tag|label|patch|sticker|"
+    r"icon|logo|symbol|block|obscur\w*|blocked[- ]?out|cropped[- ]?out|redact\w*|censor\w*)"
+)
 # A brightness/artificial qualifier.
-_BRIGHT = r"(white|bright|light|pale|whitish|high[- ]?intensity|artificial|synthetic|overlaid|superimposed)"
+_BRIGHT = r"(white|bright|light|pale|whitish|opaque|high[- ]?intensity|artificial|synthetic|overlaid|superimposed)"
 
 _OBJECT_RE = re.compile(_OBJECT, re.I)
 _BRIGHT_RE = re.compile(_BRIGHT, re.I)

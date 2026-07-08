@@ -50,7 +50,7 @@ def _encode(image_path: Path) -> str:
     return base64.b64encode(image_path.read_bytes()).decode("ascii")
 
 
-def describe_crop(image_path: Path, model: str, max_retries: int = 4) -> str:
+def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
     """Call the Groq vision model on one crop with the blind prompt; return the description."""
     payload = {
         "model": model,
@@ -68,8 +68,9 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 4) -> str:
     headers = {"Authorization": f"Bearer {_api_key()}", "Content-Type": "application/json"}
     for attempt in range(max_retries):
         r = requests.post(f"{GROQ_BASE}/chat/completions", headers=headers, json=payload, timeout=60)
-        if r.status_code == 429:  # rate limited — back off and retry
-            wait = 2 ** attempt
+        if r.status_code == 429:  # rate limited — honor Retry-After, else exponential backoff
+            retry_after = r.headers.get("retry-after")
+            wait = float(retry_after) if retry_after else min(2 ** attempt * 3, 60)
             time.sleep(wait)
             continue
         r.raise_for_status()
@@ -77,19 +78,45 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 4) -> str:
     raise RuntimeError(f"rate-limited after {max_retries} retries on {image_path.name}")
 
 
+def _already_done(out_path: Path) -> set[str]:
+    """Ids already present in a predictions.jsonl, so a re-run resumes instead of restarting."""
+    done = set()
+    if out_path.exists():
+        with open(out_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        done.add(json.loads(line)["id"])
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+    return done
+
+
 def name_all(crops_dir: str | Path, manifest_path: str | Path, out_path: str | Path,
-             model: str, throttle_s: float = 0.0) -> dict:
-    """Run the blind prompt over every crop in the manifest; write predictions.jsonl."""
+             model: str, throttle_s: float = 0.5) -> dict:
+    """Run the blind prompt over every crop; append to predictions.jsonl, resuming if it exists.
+
+    Resumable: ids already in out_path are skipped, so a rate-limit crash can be continued by
+    re-running the same command. Default throttle spaces calls to respect the free-tier RPM cap.
+    """
     crops_dir = Path(crops_dir)
     manifest = json.load(open(manifest_path, encoding="utf-8"))
     out_path = Path(out_path)
 
-    n = 0
-    with open(out_path, "w", encoding="utf-8") as f:
+    done = _already_done(out_path)
+    if done:
+        print(f"resuming: {len(done)} predictions already present, skipping those")
+
+    n = len(done)
+    with open(out_path, "a", encoding="utf-8") as f:   # append so existing rows are kept
         for i, row in enumerate(manifest):
             cid = row["id"]
+            if cid in done:
+                continue
             desc = describe_crop(crops_dir / f"{cid}.png", model)
             f.write(json.dumps({"id": cid, "description": desc}) + "\n")
+            f.flush()                                   # persist each row immediately
             n += 1
             if i % 20 == 0:
                 print(f"{i}/{len(manifest)}  {cid}: {desc[:70]}")
