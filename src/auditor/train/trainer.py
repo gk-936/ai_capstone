@@ -66,6 +66,21 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
     val_ds = make_dataset(index, "val", cfg.data, train=False)
     test_ds = make_dataset(index, "test", cfg.data, train=False)
 
+    # V2: inject the synthetic confound into the TRAIN stream (aligned with the label) so the
+    # model can latch onto it. Val/test AUC below stay tag-free; the reliance gap is measured
+    # separately via evaluation.reliance after training.
+    if cfg.shortcut.enabled:
+        from auditor.shortcut.inject import TaggedDataset
+
+        logger.info(
+            f"shortcut ON: corner={cfg.shortcut.corner} size={cfg.shortcut.size} "
+            f"p={cfg.shortcut.p} seed={cfg.shortcut.seed}"
+        )
+        train_ds = TaggedDataset(
+            base=train_ds, mode="aligned", p=cfg.shortcut.p, seed=cfg.shortcut.seed,
+            corner=cfg.shortcut.corner, size=cfg.shortcut.size,
+        )
+
     nw = 4
     train_loader = DataLoader(
         train_ds, batch_size=cfg.train.batch_size, shuffle=True, num_workers=nw, pin_memory=True
@@ -107,11 +122,13 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
             f"epoch {epoch+1}/{cfg.train.epochs} loss={running/max(len(train_loader),1):.4f} "
             f"val_auc={val_auc:.4f} ({time.time()-t0:.0f}s)"
         )
-        if val_auc > best_val_auc:
-            best_val_auc = val_auc
+        # Tag-free val AUC is a poor selector when training WITH the confound (the model
+        # expects the tag), so under shortcut mode we keep the final epoch instead of best-val.
+        if cfg.shortcut.enabled or val_auc > best_val_auc:
+            best_val_auc = max(best_val_auc, val_auc)
             torch.save(model.state_dict(), best_ckpt)
 
-    # Final test AUC using the best-val checkpoint.
+    # Reload the selected checkpoint for final evaluation.
     model.load_state_dict(torch.load(best_ckpt, map_location=device))
     test_auc = evaluate(model, test_loader, device)
 
@@ -123,5 +140,20 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
         "n_val": len(index.subset("val")),
         "n_test": len(index.subset("test")),
     }
+
+    # V2: measure the reliance gap on a balanced test subset (aligned / removed / flipped).
+    if cfg.shortcut.enabled:
+        from auditor.evaluation.reliance import reliance_gap
+
+        shortcut_cfg = {
+            "corner": cfg.shortcut.corner, "size": cfg.shortcut.size,
+            "p": cfg.shortcut.p, "seed": cfg.shortcut.seed,
+        }
+        gap = reliance_gap(
+            model, index, cfg.data, shortcut_cfg, device, batch_size=cfg.train.batch_size
+        )
+        logger.info(f"reliance: {gap}")
+        metrics.update(gap)
+
     logger.log_metrics(**metrics)
     return metrics

@@ -1,0 +1,18 @@
+# V2 — shortcut induction: train with a synthetic corner tag correlated with the label,
+# then measure the reliance gap = acc(aligned) - acc(removed) on a balanced test subset.
+# PASS = gap > 20 percentage points.
+extends: base.yaml
+
+spike: v2_shortcut
+
+train:
+  target_pathology: Pneumothorax
+  epochs: 3            # a shortcut is learned fast
+  batch_size: 16
+
+shortcut:
+  enabled: true
+  corner: top-left
+  size: 20
+  p: 0.95             # tag on 95% of positives, 5% of negatives
+  seed: 1337

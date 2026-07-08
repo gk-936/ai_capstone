@@ -38,6 +38,16 @@ class TrainConfig(BaseModel):
     amp: bool = True  # mixed precision — keeps the RTX 3050 (6GB) in budget
 
 
+class ShortcutConfig(BaseModel):
+    """Synthetic confound (V2). Present in every config so eval code can read it uniformly."""
+
+    enabled: bool = False
+    corner: str = "top-left"
+    size: int = 20
+    p: float = 0.95           # correlation strength between tag and label
+    seed: int = 1337          # seeds the deterministic per-image tag decision
+
+
 class Config(BaseModel):
     seed: int = 1337
     device: str = "cuda"  # falls back to cpu via resolve_device() if unavailable
@@ -45,6 +55,7 @@ class Config(BaseModel):
     experiments_root: str = "experiments"
     data: DataConfig = Field(default_factory=DataConfig)
     train: TrainConfig = Field(default_factory=TrainConfig)
+    shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)
 
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
