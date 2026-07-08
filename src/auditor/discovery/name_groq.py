@@ -71,6 +71,9 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
         if r.status_code == 429:  # rate limited — honor Retry-After, else exponential backoff
             retry_after = r.headers.get("retry-after")
             wait = float(retry_after) if retry_after else min(2 ** attempt * 3, 60)
+            # Direct evidence you exceeded the limit — and by how much to wait.
+            print(f"  [429] rate-limited on {image_path.name}: backing off {wait:.1f}s "
+                  f"(attempt {attempt + 1}/{max_retries})")
             time.sleep(wait)
             continue
         r.raise_for_status()
