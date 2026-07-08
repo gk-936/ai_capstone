@@ -6,7 +6,7 @@ timm
 grad-cam            # pytorch-grad-cam (V3 attribution)
 
 # Data / metrics
-numpy
+numpy<2            # pandas/scipy on this env are built against numpy 1.x (2.0 breaks ABI)
 pandas
 scikit-learn        # AUC and classification metrics
 pillow

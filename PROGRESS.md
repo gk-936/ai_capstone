@@ -14,7 +14,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 
 | Spike | Question | Threshold | Status | Measured | Notes |
 |-------|----------|-----------|--------|----------|-------|
-| V1  | Trains end-to-end, sane AUC? | sane ID AUC | TODO | — | |
+| V1  | Trains end-to-end, sane AUC? | sane ID AUC (>=0.75) | **PASS** | test AUC **0.8448** (val 0.8269) | full data (73k/13k/25.6k), DenseNet-121, 5 ep, batch 16 @224px; in NIH Pneumothorax lit range 0.80–0.85; patient-disjoint verified; monotone learning curve |
 | V2  | Model measurably cheats? | reliance gap >20pp | TODO | — | |
 | V3  | Saliency localizes confound? | >80% of positive crops | TODO | — | |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | TODO | — | proves METHOD; fail = fix pipeline, not pivot |
@@ -53,3 +53,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
   live endpoint later.
 - 2026-07-07 — env: Python 3.9.13, pydantic 2 for typed configs; src-layout with tests/conftest.py
   on sys.path (editable install flaky on old pip).
+- 2026-07-08 — V1 PASS: full-data DenseNet-121 test AUC 0.8448. Root-caused a mid-epoch CUDA
+  "Memory allocation failure" at the AdamW step to VRAM peak on the 6GB laptop GPU (shares memory
+  with display); fixed by default batch_size 32->16 (expandable_segments unsupported on Windows,
+  no-ops). Bumped torch AMP API to torch.amp.*.

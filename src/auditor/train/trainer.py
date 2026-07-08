@@ -80,7 +80,8 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
     pos_weight = torch.tensor([n_neg / n_pos], device=device)  # rebalance rare positives
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.train.lr)
-    scaler = torch.cuda.amp.GradScaler(enabled=(cfg.train.amp and device == "cuda"))
+    use_amp = cfg.train.amp and device == "cuda"
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
     best_val_auc = float("-inf")
     best_ckpt = logger.artifact_path("model_best.pth")
@@ -93,7 +94,7 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
             x = x.to(device, non_blocking=True)
             y = y.to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
-            with torch.cuda.amp.autocast(enabled=(cfg.train.amp and device == "cuda")):
+            with torch.amp.autocast("cuda", enabled=use_amp):
                 logits = model(x).squeeze(1)
                 loss = criterion(logits, y)
             scaler.scale(loss).backward()

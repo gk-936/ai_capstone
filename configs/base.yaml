@@ -16,8 +16,8 @@ data:
 
 train:
   target_pathology: Pneumothorax
-  batch_size: 32
+  batch_size: 16        # 6GB laptop GPU shares VRAM with the display; 32 OOMs mid-epoch
   epochs: 5
   lr: 0.0001
   backbone: densenet121
-  amp: true             # mixed precision — fits the RTX 3050 (6GB)
+  amp: true             # mixed precision — halves activation memory on the RTX 3050 (6GB)

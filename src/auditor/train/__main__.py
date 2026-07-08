@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import os
+
+# Reduce CUDA memory fragmentation on tight (6GB laptop) VRAM. Must be set before torch
+# initializes CUDA, hence before any import that pulls in torch.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import argparse
 
 from auditor.common.config import add_config_args, load_config
