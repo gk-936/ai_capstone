@@ -71,11 +71,14 @@ class DiscoveryConfig(BaseModel):
 
 
 class MitigationConfig(BaseModel):
-    """V5 DFR settings."""
+    """V5 DFR + Phase 3 baseline settings."""
 
-    checkpoint: str = ""       # trained model to mitigate
+    checkpoint: str = ""       # trained model to mitigate (V5 single-confound run)
     confound: str = "tag"      # 'tag' (synthetic) or 'tube' (real)
     per_group: int = 200       # target samples per (confound x label) group for the DFR set
+    # Phase 3 baselines run both confounds; give each its checkpoint.
+    checkpoint_tag: str = ""
+    checkpoint_tube: str = ""
 
 
 class Config(BaseModel):
