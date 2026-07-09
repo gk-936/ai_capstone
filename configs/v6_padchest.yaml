@@ -5,9 +5,9 @@ extends: base.yaml
 spike: v6_padchest
 
 data:
-  # PadChest 224px folder + its labels CSV (from the Academic Torrents set). NOT committed.
-  site2_images: ""              # e.g. "data/padchest_224/images"
-  padchest_labels_csv: ""       # e.g. "data/padchest_224/PADCHEST_chest_x_ray_images_labels.csv"
+  # PadChest 224px V6 subset (7,573 imgs: 573 PTX-pos + 7k neg, extracted from the tar). Gitignored.
+  site2_images: "data/padchest_v6/images-224"
+  padchest_labels_csv: "data/padchest_v6_subset.csv"
 
 # V1 clean pneumothorax checkpoint to evaluate cross-site.
 mitigation:

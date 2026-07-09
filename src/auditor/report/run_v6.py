@@ -22,12 +22,25 @@ from auditor.mitigation.dfr import apply_dfr, extract_features, fit_dfr_head
 from auditor.train.trainer import _build_model, evaluate
 
 
-def _padchest_loader(index, split, images_dir, image_size, batch_size):
+def _nih_reference_auc(cfg, model, device, batch_size) -> float:
+    """NIH test AUC under the per-image-std transform — the honest in-distribution reference."""
+    from auditor.data.nih import SplitIndex, build_index
+    from auditor.data.torch_dataset import NIHDataset
+
+    idx = build_index(cfg.data, target=cfg.train.target_pathology, seed=cfg.seed,
+                      max_per_split={"test": 8000})  # cap for speed; AUC is stable
+    ds = NIHDataset(rows=idx.subset("test"), images_dir=resolve_path(cfg.data.nih_images),
+                    image_size=cfg.data.image_size, train=False, per_image_std=True)
+    loader = DataLoader(ds, batch_size=batch_size, num_workers=2, pin_memory=True)
+    return evaluate(model, loader, device)
+
+
+def _padchest_loader(index, split, images_dir, image_size, batch_size, per_image_std=True):
     """Build a loader over PadChest rows (reusing the generic NIHDataset image loader)."""
     from auditor.data.torch_dataset import NIHDataset
 
     ds = NIHDataset(rows=index.subset(split), images_dir=resolve_path(images_dir),
-                    image_size=image_size, train=False)
+                    image_size=image_size, train=False, per_image_std=per_image_std)
     return DataLoader(ds, batch_size=batch_size, num_workers=2, pin_memory=True)
 
 
@@ -49,6 +62,12 @@ def run_v6(cfg: Config, logger: RunLogger, checkpoint: str, labels_csv: str,
     logger.info(f"PadChest split: {index.n}")
 
     bs = cfg.train.batch_size
+
+    # In-distribution reference: re-measure NIH test AUC with the SAME per-image-std transform,
+    # so the OOD comparison is apples-to-apples (not against the old differently-normalized 0.8448).
+    nih_auc = _nih_reference_auc(cfg, model, device, bs)
+    logger.info(f"NIH test AUC (per-image-std transform): {nih_auc:.4f}")
+
     test_loader = _padchest_loader(index, "test", images_dir, cfg.data.image_size, bs)
 
     # OOD AUC (before adaptation).
@@ -68,10 +87,10 @@ def run_v6(cfg: Config, logger: RunLogger, checkpoint: str, labels_csv: str,
         logger.info("DFR adapt skipped: PadChest dfr subset is single-class")
 
     metrics = {
-        "nih_auc_reference": cfg.v6_nih_auc_reference,   # the known in-dist AUC (e.g. 0.8448)
+        "nih_auc_reference": round(float(nih_auc), 4),   # re-measured with per-image-std transform
         "padchest_auc_before": round(float(padchest_auc_before), 4),
         "padchest_auc_after_dfr": round(float(padchest_auc_after), 4),
-        "ood_drop": round(cfg.v6_nih_auc_reference - float(padchest_auc_before), 4),
+        "ood_drop": round(float(nih_auc) - float(padchest_auc_before), 4),
         "recovery": round(float(padchest_auc_after) - float(padchest_auc_before), 4),
         "n_test": index.n["test"]["n"], "n_dfr": index.n["dfr"]["n"],
     }
