@@ -1,0 +1,9 @@
+# End-to-end auditor on the SYNTHETIC tag-confound model (controlled demo).
+extends: v2_shortcut.yaml
+
+spike: auditor_tag
+
+mitigation:
+  checkpoint: "experiments/v2_shortcut/20260708_060719_0515dc/artifacts/model_best.pth"
+  confound: tag
+  per_group: 200

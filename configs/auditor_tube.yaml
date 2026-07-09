@@ -1,0 +1,9 @@
+# End-to-end auditor on the REAL tube-confound model (the flagship demo).
+extends: v4b_tube.yaml
+
+spike: auditor_tube
+
+mitigation:
+  checkpoint: "experiments/v4b_tube/20260708_204138_da03d8/artifacts/model_best.pth"
+  confound: tube
+  per_group: 60
