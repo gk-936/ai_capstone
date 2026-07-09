@@ -34,11 +34,18 @@ bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot
 - [ ] wire end-to-end auditor loop
 - [ ] before/after Grad-CAM demo artifact
 
-## Phase 3 — Experiments + baselines + ablations (LOCKED)
-- [ ] synthetic correlation-strength sweep
-- [ ] cross-site experiments
-- [ ] baselines: ERM / GroupDRO / JTT / DFR
-- [ ] contrast vs RoentMod (prompt-free, no generative fine-tuning, lower compute)
+## Phase 3 — Experiments + baselines + ablations (STARTED — reordered ahead of V6 for paper rigor)
+- [x] baselines ERM / JTT / DFR (3 seeds, mean±std) ... DONE
+      TUBE (real): ERM 0.672 -> JTT 0.791 / DFR 0.790 worst-group (+0.12, ID held ~0.96); gain >> variance.
+      TAG (pure shortcut): ERM 0.500 -> JTT/DFR ~0.61 worst-group but ID collapses 0.94->~0.60
+      (hollow-shortcut finding). Two baselines agree -> mitigation isn't a DFR quirk.
+- [x] naming-off ablation ................. DONE (by construction: no method calls the VLM, yet
+      worst-group recovers on the REAL tube -> the loop's value is NOT the VLM naming).
+- [x] multi-seed variance ................. DONE (3 seeds; ± std reported in the table).
+- [ ] synthetic correlation-strength sweep (optional)
+- [ ] cross-site experiments (needs 2nd site / V6)
+- [ ] GroupDRO baseline (optional; needs train-time group labels)
+- [ ] contrast vs RoentMod (prompt-free, no generative fine-tuning, lower compute) — in CO1
 - [ ] ablations (naming on/off, mitigation variants); multi-seed variance
 
 ## Phase 4 — Evaluation + writeup (LOCKED)
