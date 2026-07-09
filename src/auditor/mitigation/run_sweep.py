@@ -45,6 +45,33 @@ def _markdown(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _find_completed_run(cfg: Config, spike: str):
+    """A previously-completed sweep_pXX run: (checkpoint, trained_gap) or None.
+
+    Lets a re-run skip p values already trained (resumable after a Ctrl+C). A run counts as
+    complete only if it has both a model_best.pth and a metrics.json containing the reliance gap.
+    """
+    import json as _json
+    from pathlib import Path
+
+    from auditor.common.paths import resolve_path
+
+    base = resolve_path(cfg.experiments_root) / spike
+    if not base.exists():
+        return None
+    for run_dir in sorted(base.glob("*"), reverse=True):
+        ckpt = run_dir / "artifacts" / "model_best.pth"
+        mfile = run_dir / "metrics.json"
+        try:
+            with open(mfile, encoding="utf-8") as f:
+                m = _json.load(f)
+            if "gap" in m and ckpt.exists():
+                return str(ckpt), m["gap"]
+        except (FileNotFoundError, ValueError):
+            continue
+    return None
+
+
 def run_sweep(cfg: Config, logger: RunLogger, p_values: list[float]) -> dict:
     device = resolve_device(cfg.device)
     logger.info(f"correlation-strength sweep: p_values={p_values} device={device}")
@@ -57,12 +84,18 @@ def run_sweep(cfg: Config, logger: RunLogger, p_values: list[float]) -> dict:
         pcfg.shortcut.p = float(p)
         pcfg.spike = f"sweep_p{int(round(p * 100))}"
 
-        # Train the tagged model at this p; train_v1 returns the reliance gap and writes model_best.
-        sub_logger = RunLogger(pcfg.spike, pcfg, experiments_root=cfg.experiments_root)
-        train_metrics = train_v1(pcfg, sub_logger)
-        checkpoint = str(sub_logger.artifact_path("model_best.pth"))
-        gap_trained = train_metrics.get("gap", float("nan"))
-        logger.info(f"p={p}: trained reliance gap={gap_trained}")
+        # Resume: reuse a completed prior run for this p instead of retraining.
+        done = _find_completed_run(cfg, pcfg.spike)
+        if done is not None:
+            checkpoint, gap_trained = done
+            logger.info(f"p={p}: reusing completed run (gap={gap_trained}) at {checkpoint}")
+        else:
+            # Train the tagged model at this p; train_v1 returns the gap and writes model_best.
+            sub_logger = RunLogger(pcfg.spike, pcfg, experiments_root=cfg.experiments_root)
+            train_metrics = train_v1(pcfg, sub_logger)
+            checkpoint = str(sub_logger.artifact_path("model_best.pth"))
+            gap_trained = train_metrics.get("gap", float("nan"))
+            logger.info(f"p={p}: trained reliance gap={gap_trained}")
 
         # DFR recovery on that checkpoint.
         rec = _dfr_recovery_for_checkpoint(pcfg, checkpoint, device)
