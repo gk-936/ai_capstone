@@ -26,21 +26,47 @@ BLIND_PROMPT = (
 )
 
 
-def _api_key() -> str:
+def _api_keys() -> list[str]:
+    """All configured Groq keys, in priority order.
+
+    Reads (in order): GROQ_API_KEYS (comma-separated), GROQ_API_KEY_1/_2/... , then GROQ_API_KEY.
+    Multiple keys let the run rotate to an overflow key when the primary hits its rate limit —
+    intended for a consented team/research pool, kept to this project.
+    """
     import os
 
-    key = os.environ.get("GROQ_API_KEY", "").strip()
-    if not key:
+    keys: list[str] = []
+    csv = os.environ.get("GROQ_API_KEYS", "")
+    keys += [k.strip() for k in csv.split(",") if k.strip()]
+    i = 1
+    while True:
+        k = os.environ.get(f"GROQ_API_KEY_{i}", "").strip()
+        if not k:
+            break
+        keys.append(k)
+        i += 1
+    single = os.environ.get("GROQ_API_KEY", "").strip()
+    if single:
+        keys.append(single)
+
+    # De-dup preserving order.
+    seen, out = set(), []
+    for k in keys:
+        if k not in seen:
+            seen.add(k)
+            out.append(k)
+    if not out:
         raise RuntimeError(
-            "GROQ_API_KEY not set. Get a free key at https://console.groq.com (no card), then "
-            "set it in your shell or in a .env file (see .env.example)."
+            "No Groq key set. Get a free key at https://console.groq.com (no card), then set "
+            "GROQ_API_KEY (or GROQ_API_KEYS=k1,k2,k3 for a rotation pool) in .env."
         )
-    return key
+    return out
 
 
 def list_models() -> list[str]:
     """Return available Groq model ids (to pick a current vision model)."""
-    r = requests.get(f"{GROQ_BASE}/models", headers={"Authorization": f"Bearer {_api_key()}"},
+    key = _api_keys()[0]
+    r = requests.get(f"{GROQ_BASE}/models", headers={"Authorization": f"Bearer {key}"},
                      timeout=30)
     r.raise_for_status()
     return sorted(m["id"] for m in r.json().get("data", []))
@@ -50,8 +76,19 @@ def _encode(image_path: Path) -> str:
     return base64.b64encode(image_path.read_bytes()).decode("ascii")
 
 
-def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
-    """Call the Groq vision model on one crop with the blind prompt; return the description."""
+# Persistent pointer into the key pool so a rate-limited key stays deprioritized across crops.
+_KEY_IDX = 0
+
+
+def describe_crop(image_path: Path, model: str, max_retries: int = 6,
+                  keys: list[str] | None = None) -> str:
+    """Call the Groq vision model on one crop with the blind prompt; return the description.
+
+    On a 429, rotate to the next configured key and retry immediately; only sleep-and-back-off
+    once every key has 429'd within an attempt cycle (all rate-limited at once).
+    """
+    global _KEY_IDX
+    keys = keys or _api_keys()
     payload = {
         "model": model,
         "messages": [{
@@ -65,8 +102,9 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
         "temperature": 0.0,
         "max_tokens": 120,
     }
-    headers = {"Authorization": f"Bearer {_api_key()}", "Content-Type": "application/json"}
     for attempt in range(max_retries):
+        key = keys[_KEY_IDX % len(keys)]
+        headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
         try:
             r = requests.post(f"{GROQ_BASE}/chat/completions", headers=headers,
                               json=payload, timeout=60)
@@ -77,12 +115,17 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
                   f"(attempt {attempt + 1}/{max_retries})")
             time.sleep(wait)
             continue
-        if r.status_code == 429:  # rate limited — honor Retry-After, else exponential backoff
+        if r.status_code == 429:  # rate limited — rotate to the next key first
+            _KEY_IDX += 1
+            # If we've now cycled past all keys within this call, they're all limited: back off.
+            if len(keys) > 1 and (attempt + 1) % len(keys) != 0:
+                print(f"  [429] key#{(_KEY_IDX - 1) % len(keys) + 1} limited on {image_path.name}"
+                      f"; rotating to key#{_KEY_IDX % len(keys) + 1}")
+                continue
             retry_after = r.headers.get("retry-after")
             wait = float(retry_after) if retry_after else min(2 ** attempt * 3, 60)
-            # Direct evidence you exceeded the limit — and by how much to wait.
-            print(f"  [429] rate-limited on {image_path.name}: backing off {wait:.1f}s "
-                  f"(attempt {attempt + 1}/{max_retries})")
+            print(f"  [429] all {len(keys)} key(s) limited on {image_path.name}: "
+                  f"backing off {wait:.1f}s (attempt {attempt + 1}/{max_retries})")
             time.sleep(wait)
             continue
         if r.status_code >= 500:  # transient server error — retry
@@ -121,6 +164,9 @@ def name_all(crops_dir: str | Path, manifest_path: str | Path, out_path: str | P
     manifest = json.load(open(manifest_path, encoding="utf-8"))
     out_path = Path(out_path)
 
+    keys = _api_keys()
+    print(f"using {len(keys)} Groq key(s)" + (" with 429 rotation" if len(keys) > 1 else ""))
+
     done = _already_done(out_path)
     if done:
         print(f"resuming: {len(done)} predictions already present, skipping those")
@@ -131,7 +177,7 @@ def name_all(crops_dir: str | Path, manifest_path: str | Path, out_path: str | P
             cid = row["id"]
             if cid in done:
                 continue
-            desc = describe_crop(crops_dir / f"{cid}.png", model)
+            desc = describe_crop(crops_dir / f"{cid}.png", model, keys=keys)
             f.write(json.dumps({"id": cid, "description": desc}) + "\n")
             f.flush()                                   # persist each row immediately
             n += 1
