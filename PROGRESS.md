@@ -34,8 +34,11 @@ correlation sweep DONE, Phase-2 auditor loop built. Remaining: V6 (data-blocked)
       attribution,discovery,mitigation,evaluation,report}; 64 tests)
 - [x] wire end-to-end auditor loop ............... DONE (report/run_auditor.py, CLI
       `python -m auditor.report`: detect->localize->[name]->mitigate->audit_report.{json,md})
-- [~] before/after Grad-CAM demo artifact ........ IN-PROGRESS (demo_figure.py built; auditor run
-      on tube model generating before_after_gradcam.png)
+- [x] before/after Grad-CAM demo artifact ........ DONE. Auditor run on the REAL tube model:
+      one command produced audit_report (detect gap 0.287 -> mitigate worst-group 0.67->0.83,
+      ID 0.96->0.97) + before/after Grad-CAM figure. Post-DFR attention broadens away from the
+      confound-associated region. Artifacts: docs/writeup/auditor_before_after_tube.png +
+      auditor_report_tube.md.
 
 ## Phase 3 — Experiments + baselines + ablations (STARTED — reordered ahead of V6 for paper rigor)
 - [x] baselines ERM / JTT / DFR (3 seeds, mean±std) ... DONE
