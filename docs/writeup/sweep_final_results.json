@@ -1,0 +1,57 @@
+[
+  {
+    "p": 0.6,
+    "gap_trained": 0.0003,
+    "checkpoint": "C:\\Users\\gokul D\\ai_capstone\\experiments\\sweep_p60\\20260709_115558_073a05\\artifacts\\model_best.pth",
+    "worst_group_before": 0.7497,
+    "worst_group_after": 0.653,
+    "id_before": 0.75,
+    "id_after": 0.6603,
+    "gap_before": 0.0003,
+    "gap_after": 0.0073
+  },
+  {
+    "p": 0.7,
+    "gap_trained": 0.0103,
+    "checkpoint": "C:\\Users\\gokul D\\ai_capstone\\experiments\\sweep_p70\\20260709_124958_4207c0\\artifacts\\model_best.pth",
+    "worst_group_before": 0.745,
+    "worst_group_after": 0.6703,
+    "id_before": 0.7553,
+    "id_after": 0.668,
+    "gap_before": 0.0103,
+    "gap_after": -0.0023
+  },
+  {
+    "p": 0.8,
+    "gap_trained": 0.0746,
+    "checkpoint": "C:\\Users\\gokul D\\ai_capstone\\experiments\\sweep_p80\\20260709_133536_68a8b5\\artifacts\\model_best.pth",
+    "worst_group_before": 0.7217,
+    "worst_group_after": 0.672,
+    "id_before": 0.7963,
+    "id_after": 0.6393,
+    "gap_before": 0.0746,
+    "gap_after": -0.0327
+  },
+  {
+    "p": 0.9,
+    "gap_trained": 0.2943,
+    "checkpoint": "C:\\Users\\gokul D\\ai_capstone\\experiments\\sweep_p90\\20260709_185756_531469\\artifacts\\model_best.pth",
+    "worst_group_before": 0.5847,
+    "worst_group_after": 0.6053,
+    "id_before": 0.879,
+    "id_after": 0.6177,
+    "gap_before": 0.2943,
+    "gap_after": 0.0124
+  },
+  {
+    "p": 0.95,
+    "gap_trained": 0.4397,
+    "checkpoint": "C:\\Users\\gokul D\\ai_capstone\\experiments\\sweep_p95\\20260709_193525_a133c7\\artifacts\\model_best.pth",
+    "worst_group_before": 0.5,
+    "worst_group_after": 0.5927,
+    "id_before": 0.9397,
+    "id_after": 0.6173,
+    "gap_before": 0.4397,
+    "gap_after": 0.0246
+  }
+]

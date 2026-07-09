@@ -42,11 +42,13 @@ bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot
 - [x] naming-off ablation ................. DONE (by construction: no method calls the VLM, yet
       worst-group recovers on the REAL tube -> the loop's value is NOT the VLM naming).
 - [x] multi-seed variance ................. DONE (3 seeds; ± std reported in the table).
-- [x] synthetic correlation-strength sweep ... PARTIAL (p=0.6/0.7/0.8 run + p=0.95 reused; p=0.9
-      pending, resumable). FINDING: shortcut has an ONSET THRESHOLD — trained reliance gap is
-      ~0 at p=0.6 (0.0003) and p=0.7 (0.010), rises at p=0.8 (0.075), and is large at p=0.95
-      (0.44). Below ~p=0.7 the model ignores the tag and learns real signal (test AUC ~0.83);
-      DFR only hurts when there's no shortcut to remove. Table: docs/writeup/sweep_partial_table.md
+- [x] synthetic correlation-strength sweep ... DONE (all 5 points; resumed cleanly for p=0.9/0.95).
+      Trained reliance gap rises MONOTONICALLY with p: 0.000 (p=.6) -> 0.010 (.7) -> 0.075 (.8)
+      -> 0.294 (.9) -> 0.440 (.95). FINDINGS: (1) ONSET THRESHOLD — below ~p=0.7 the model ignores
+      the tag and learns real signal (test AUC ~0.83); reliance then climbs steeply. (2) The
+      DFR ID-drop is STRENGTH-DEPENDENT: negligible at low p (no shortcut), large at high p
+      (pure-shortcut model is hollow, ID 0.94->0.62 at p=.95). DFR raises worst-group across all p.
+      Figure: docs/writeup/sweep_figure.png; table: docs/writeup/sweep_final_table.md. Single seed.
 - [ ] cross-site experiments (needs 2nd site / V6)
 - [ ] GroupDRO baseline (optional; needs train-time group labels)
 - [ ] contrast vs RoentMod (prompt-free, no generative fine-tuning, lower compute) — in CO1
