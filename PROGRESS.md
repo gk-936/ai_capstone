@@ -8,7 +8,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 - [x] CLAUDE.md + PROGRESS.md committed ............... PASS
 - [x] reproducibility skeleton (config, seeds, logger) PASS (11 tests pass)
 - [x] NIH ChestX-ray14 obtained (path in config) ..... PASS (112,120 imgs @224px; paths verified)
-- [ ] literature map drafted (CO1) ................... TODO
+- [x] literature map drafted (CO1) ................... DONE (docs/writeup/CO1_related_work.md)
 
 ## Phase 1 — Validation gauntlet (gated; STOP after each spike)
 
@@ -22,17 +22,20 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial: pure-shortcut model is hollow) | DFR last-layer retrain on group-balanced data. REAL-data mitigation is the anti-wrapper headline. |
 | V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | TODO | — | |
 
-**Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT to synthetic-only study.
-V1-V3 + V4a all PASS; V4b (real device naming) fails on hallucination. Per plan: drop
-auto-naming as a claim for real confounds; reframe as a controlled synthetic-confound
-detect->name->mitigate study (V2/V3/V4a/V5/V6), with V4b reported as an honest negative result
-bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot (V5 next).
+**Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT EXECUTED. V1-V3 + V4a PASS;
+V4b (real device naming) fails on hallucination. Pivot done: auto-naming dropped as a claim for
+real confounds; project reframed as a controlled detect->localize->mitigate study on synthetic
+AND real confounds, with V4b as an honest negative result bounding where VLM naming transfers.
+Since the pivot: V5 PASS (real-tube mitigation), Phase-3 baselines+ablation+variance DONE,
+correlation sweep DONE, Phase-2 auditor loop built. Remaining: V6 (data-blocked), writeup.
 
-## Phase 2 — System build (LOCKED until green-light)
-- [ ] promote spikes into modules (trainer, attribution, discovery/VLM-naming, mitigation,
-      evaluation/reporting)
-- [ ] wire end-to-end auditor loop
-- [ ] before/after Grad-CAM demo artifact
+## Phase 2 — System build (unlocked post-pivot)
+- [x] promote spikes into modules ................. DONE (src/auditor/{data,train,shortcut,
+      attribution,discovery,mitigation,evaluation,report}; 64 tests)
+- [x] wire end-to-end auditor loop ............... DONE (report/run_auditor.py, CLI
+      `python -m auditor.report`: detect->localize->[name]->mitigate->audit_report.{json,md})
+- [~] before/after Grad-CAM demo artifact ........ IN-PROGRESS (demo_figure.py built; auditor run
+      on tube model generating before_after_gradcam.png)
 
 ## Phase 3 — Experiments + baselines + ablations (STARTED — reordered ahead of V6 for paper rigor)
 - [x] baselines ERM / JTT / DFR (3 seeds, mean±std) ... DONE
@@ -49,10 +52,9 @@ bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot
       DFR ID-drop is STRENGTH-DEPENDENT: negligible at low p (no shortcut), large at high p
       (pure-shortcut model is hollow, ID 0.94->0.62 at p=.95). DFR raises worst-group across all p.
       Figure: docs/writeup/sweep_figure.png; table: docs/writeup/sweep_final_table.md. Single seed.
-- [ ] cross-site experiments (needs 2nd site / V6)
-- [ ] GroupDRO baseline (optional; needs train-time group labels)
-- [ ] contrast vs RoentMod (prompt-free, no generative fine-tuning, lower compute) — in CO1
-- [ ] ablations (naming on/off, mitigation variants); multi-seed variance
+- [x] contrast vs RoentMod (prompt-free, no gen fine-tuning, lower compute) ... DONE (in CO1)
+- [ ] cross-site experiments ............... BLOCKED (needs a 2nd site / V6 data)
+- [ ] GroupDRO baseline .................... SKIPPED (redundant with ERM/JTT/DFR table; decided)
 
 ## Phase 4 — Evaluation + writeup (LOCKED)
 - [ ] consolidate metrics (worst-group acc, ID<->OOD gap, naming P/R, cost vs RoentMod)
@@ -105,3 +107,11 @@ bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot
   a pure-shortcut model has little real signal to fall back on (informative, kept as the
   companion case; no milder-p retrain needed since tube carries the ID-preservation result).
   Fixed group_balanced_sample to handle the structurally-empty (tube=1,label=0) group.
+- 2026-07-09 — Phase 3 (reordered ahead of V6 for paper rigor): ERM/JTT/DFR baseline table with
+  3-seed variance; naming-off ablation (no method calls the VLM yet worst-group recovers -> the
+  loop's value is not the prompt); correlation-strength sweep (monotone gap-vs-p, onset threshold
+  ~p=0.7). GroupDRO baseline SKIPPED as redundant (ERM/JTT/DFR already covers baselines) and heavy.
+- 2026-07-09 — Phase 2 built post-pivot: end-to-end auditor loop (report/run_auditor.py) unifying
+  detect->localize->[name,optional]->mitigate into one command emitting audit_report + before/after
+  Grad-CAM demo figure. Pure orchestration over tested modules; 64 tests pass. V6 remains
+  data-blocked (no 2nd hospital site); writeup deferred to last.
