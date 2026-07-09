@@ -1,0 +1,11 @@
+# V5 — DFR mitigation of the REAL chest-tube confound (V4b model).
+# PASS = confound-conflicting (PTX-without-tube) accuracy rises, in-distribution stable.
+# The paper's key result: we mitigate a REAL shortcut even though NAMING it (V4b) failed.
+extends: v4b_tube.yaml
+
+spike: v5_dfr_tube
+
+mitigation:
+  checkpoint: "experiments/v4b_tube/20260708_204138_da03d8/artifacts/model_best.pth"
+  confound: tube
+  per_group: 60          # tube+PTX groups are small; keep per-group modest

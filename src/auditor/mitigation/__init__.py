@@ -1,1 +1,10 @@
-"""mitigation module (spike scaffold — no modelling code yet)."""
+"""mitigation module: Deep Feature Reweighting (V5)."""
+
+from auditor.mitigation.dfr import (
+    apply_dfr,
+    extract_features,
+    fit_dfr_head,
+    group_balanced_sample,
+)
+
+__all__ = ["apply_dfr", "extract_features", "fit_dfr_head", "group_balanced_sample"]

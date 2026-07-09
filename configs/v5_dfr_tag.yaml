@@ -1,0 +1,10 @@
+# V5 — DFR mitigation of the SYNTHETIC tag confound (V2 model).
+# PASS = confound-conflicting (tag-removed) accuracy rises, in-distribution stable.
+extends: v2_shortcut.yaml
+
+spike: v5_dfr_tag
+
+mitigation:
+  checkpoint: "experiments/v2_shortcut/20260708_060719_0515dc/artifacts/model_best.pth"
+  confound: tag
+  per_group: 200

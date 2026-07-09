@@ -70,6 +70,14 @@ class DiscoveryConfig(BaseModel):
     out_dir: str = ""          # where crops/ + manifest.json are written (default: run artifacts)
 
 
+class MitigationConfig(BaseModel):
+    """V5 DFR settings."""
+
+    checkpoint: str = ""       # trained model to mitigate
+    confound: str = "tag"      # 'tag' (synthetic) or 'tube' (real)
+    per_group: int = 200       # target samples per (confound x label) group for the DFR set
+
+
 class Config(BaseModel):
     seed: int = 1337
     device: str = "cuda"  # falls back to cpu via resolve_device() if unavailable
@@ -81,6 +89,7 @@ class Config(BaseModel):
     shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)
     attribution: AttributionConfig = Field(default_factory=AttributionConfig)
     discovery: DiscoveryConfig = Field(default_factory=DiscoveryConfig)
+    mitigation: MitigationConfig = Field(default_factory=MitigationConfig)
 
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
