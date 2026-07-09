@@ -18,12 +18,15 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V2  | Model measurably cheats? | reliance gap >20pp | **PASS** | **gap 44pp** (aligned .94 / removed .50 / flipped .05) | corner tag p=.95, 3 ep; acc_removed=0.500 = pure-shortcut fingerprint (pre-validated); monotone collapse; tag-free AUC dropped 0.84->0.74 as expected |
 | V3  | Saliency localizes confound? | >80% of positive crops | **PASS** | **tagged peak-in-box 100%** (control untagged 0.5%) | Grad-CAM on V2 ckpt, 200 imgs, layer features.norm5; control near-zero proves saliency follows the TAG not the corner; mass-frac 0.14 in a 0.8%-area box |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
-| V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | TODO | — | CRITICAL GATE; fail (after V4a pass) = pivot |
+| V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | **FAIL** | **P 0.57 / R 0.66 / halluc 0.50** | Llama-4-Scout on real tube crops. Halluc 50% is the killer: VLM fabricates tubes/central-lines/ETTs on half the tube-FREE controls (47/50 explicit device terms — genuine hallucination, audited, not matcher error). Also misses subtle real tubes (R .66). PIVOT TRIGGERED. |
 | V5  | Mitigation recovers accuracy? | worst-group up, ID stable | TODO | — | |
 | V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | TODO | — | |
 
-**Green-light decision:** ________
-(V1–V3 + V4a + V4b + V5–V6 all PASS -> Phase 2 | V4b FAIL -> pivot to synthetic-only study)
+**Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT to synthetic-only study.
+V1-V3 + V4a all PASS; V4b (real device naming) fails on hallucination. Per plan: drop
+auto-naming as a claim for real confounds; reframe as a controlled synthetic-confound
+detect->name->mitigate study (V2/V3/V4a/V5/V6), with V4b reported as an honest negative result
+bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot (V5 next).
 
 ## Phase 2 — System build (LOCKED until green-light)
 - [ ] promote spikes into modules (trainer, attribution, discovery/VLM-naming, mitigation,
@@ -71,3 +74,14 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
   (FAIL 0.77 -> PASS 0.90) after auditing ALL 23 original misses: ~13 were the VLM saying
   'rectangular/opaque white object' that the regex missed (real bug), the rest genuine VLM misses
   kept in the denominator. Fix verified conservative (control-hallucination unchanged at 0.02).
+- 2026-07-08 — V4b FAIL -> PIVOT. Real chest-tube confound (NEATX). Detect+localize succeeded
+  (tube reliance gap 28.75pp; Grad-CAM side-consistency 96.6%), but NAMING failed the gate:
+  P 0.57 / R 0.66 / ctrl-halluc 0.50. Root cause (audited): Llama-4-Scout fabricates devices
+  (endotracheal tube / central line / catheter) on 50/100 tube-FREE control crops (47 explicit,
+  genuine hallucination not matcher error) and misses subtle real tubes (R .66). The easy
+  synthetic box was unfabricatable; real anatomy (vessels/fissures/rib edges) fools a device-
+  primed VLM. This is the documented pivot trigger (V4a passed, only V4b failed). Negative result
+  is scientifically valuable: it bounds where prompt-free VLM naming transfers. Detect->localize->
+  mitigate on synthetic confounds remains fully intact for the pivot study.
+  NON-OLLAMA aside: local qwen2.5vl:3b was too unreliable (dropped image ~2/3 of calls) — a
+  finding that capable models are required; Ollama path kept in repo for future use.
