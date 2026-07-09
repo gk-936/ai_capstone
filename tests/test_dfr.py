@@ -34,8 +34,18 @@ def test_group_balanced_deterministic():
     assert a.equals(b)
 
 
-def test_group_balanced_empty_group_raises():
-    rows = _rows({(0, 0): 10, (0, 1): 10, (1, 0): 10, (1, 1): 0})
+def test_group_balanced_handles_missing_group():
+    # Real-confound case: (confound=1,label=0) is structurally empty (e.g. tube w/o pneumothorax).
+    # Balance the 3 existing groups instead of crashing.
+    rows = _rows({(0, 0): 40, (0, 1): 10, (1, 0): 0, (1, 1): 8})
+    bal = group_balanced_sample(rows, "confound", "label", seed=1)
+    counts = bal.groupby(["confound", "label"]).size()
+    assert set(counts.values) == {8}     # 3 groups equalized to the smallest existing (8)
+    assert len(bal) == 24
+
+
+def test_group_balanced_too_few_groups_raises():
+    rows = _rows({(0, 0): 10, (0, 1): 0, (1, 0): 0, (1, 1): 0})
     with pytest.raises(ValueError):
         group_balanced_sample(rows, "confound", "label", seed=1)
 

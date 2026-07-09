@@ -16,19 +16,23 @@ import pandas as pd
 
 def group_balanced_sample(rows: pd.DataFrame, confound_col: str, label_col: str,
                           seed: int = 1337, per_group: int | None = None) -> pd.DataFrame:
-    """Equal-sized subset across the 4 (confound x label) groups, deterministic per seed.
+    """Equal-sized subset across the NON-EMPTY (confound x label) groups, deterministic per seed.
 
-    per_group defaults to the smallest group's size so all four are equalized without upsampling.
+    Balances across whichever of the four (confound x label) groups actually exist. This matters
+    for real confounds where a group is structurally absent — e.g. chest tubes occur almost only
+    on pneumothorax-positives, so (tube=1, label=0) is empty; we balance the remaining groups.
+    per_group defaults to the smallest non-empty group's size (no upsampling).
     """
     groups = {}
     for c in (0, 1):
         for y in (0, 1):
             g = rows[(rows[confound_col] == c) & (rows[label_col] == y)]
-            groups[(c, y)] = g
+            if len(g) > 0:
+                groups[(c, y)] = g
+    if len(groups) < 2:
+        raise ValueError("need at least 2 non-empty (confound,label) groups to balance")
     smallest = min(len(g) for g in groups.values())
     n = smallest if per_group is None else min(per_group, smallest)
-    if n == 0:
-        raise ValueError("a (confound,label) group is empty; cannot group-balance")
     parts = [g.sample(n=n, random_state=seed) for g in groups.values()]
     return pd.concat(parts).sample(frac=1.0, random_state=seed).reset_index(drop=True)
 

@@ -32,6 +32,24 @@ def _load(cfg: Config, checkpoint: str, device: str):
     return model.to(device).eval()
 
 
+class _TagFlagged(torch.utils.data.Dataset):
+    """Applies the corner tag to selected images (module-level so DataLoader workers can pickle it)."""
+
+    def __init__(self, base, flags, corner, size):
+        self.base, self.flags, self.corner, self.size = base, flags, corner, size
+
+    def __len__(self):
+        return len(self.base)
+
+    def __getitem__(self, i):
+        from auditor.shortcut.inject import add_corner_tag
+
+        x, y = self.base[i]
+        if self.flags[i]:
+            x = add_corner_tag(x, corner=self.corner, size=self.size)
+        return x, y
+
+
 @torch.no_grad()
 def _accuracy(model, loader, device, threshold=0.5) -> float:
     model.eval()
@@ -99,20 +117,6 @@ def _features_and_groups_tag(model, cfg, device, seed):
 
     sub = SplitIndex(df=bal.assign(split="dfr"), target="Pneumothorax", n_pos={})
     base = make_dataset(sub, "dfr", cfg.data, train=False)
-
-    class _TagFlagged(torch.utils.data.Dataset):
-        def __init__(self, base, flags, corner, size):
-            self.base, self.flags, self.corner, self.size = base, flags, corner, size
-
-        def __len__(self):
-            return len(self.base)
-
-        def __getitem__(self, i):
-            from auditor.shortcut.inject import add_corner_tag
-            x, y = self.base[i]
-            if self.flags[i]:
-                x = add_corner_tag(x, corner=self.corner, size=self.size)
-            return x, y
 
     ds = _TagFlagged(base, tag_flags, cfg.shortcut.corner, cfg.shortcut.size)
     loader = DataLoader(ds, batch_size=cfg.train.batch_size, num_workers=2, pin_memory=True)
