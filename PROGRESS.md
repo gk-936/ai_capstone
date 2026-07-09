@@ -20,7 +20,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | **FAIL** | **P 0.57 / R 0.66 / halluc 0.50** | Llama-4-Scout on real tube crops. Halluc 50% is the killer: VLM fabricates tubes/central-lines/ETTs on half the tube-FREE controls (47/50 explicit device terms — genuine hallucination, audited, not matcher error). Also misses subtle real tubes (R .66). PIVOT TRIGGERED. |
 | V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial: pure-shortcut model is hollow) | DFR last-layer retrain on group-balanced data. REAL-data mitigation is the anti-wrapper headline. |
-| V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | TODO | — | |
+| V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | **CODE READY** | — (awaiting data) | NIH->PadChest cross-site. Loader + OOD runner + DFR-adapt built & tested (5 loader tests); config/CLI ready. BLOCKED on the 12.89GB PadChest 224px download (Academic Torrents). Fill site2_images + padchest_labels_csv -> run `--v6`. Scope: cross-site OOD only (PadChest chest-drain labels too few, n=9, for tube-transfer). |
 
 **Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT EXECUTED. V1-V3 + V4a PASS;
 V4b (real device naming) fails on hallucination. Pivot done: auto-naming dropped as a claim for
@@ -116,5 +116,16 @@ correlation sweep DONE, Phase-2 auditor loop built. Remaining: V6 (data-blocked)
   ~p=0.7). GroupDRO baseline SKIPPED as redundant (ERM/JTT/DFR already covers baselines) and heavy.
 - 2026-07-09 — Phase 2 built post-pivot: end-to-end auditor loop (report/run_auditor.py) unifying
   detect->localize->[name,optional]->mitigate into one command emitting audit_report + before/after
-  Grad-CAM demo figure. Pure orchestration over tested modules; 64 tests pass. V6 remains
-  data-blocked (no 2nd hospital site); writeup deferred to last.
+  Grad-CAM demo figure. Pure orchestration over tested modules; 64 tests pass.
+- 2026-07-09 — Phase 2 demo DONE on the REAL tube model: one auditor command -> report (gap 0.287,
+  worst-group 0.67->0.83, ID 0.96->0.97) + before/after Grad-CAM (attention broadens off the
+  confound post-DFR). Artifacts in docs/writeup/.
+- 2026-07-09 — Second site chosen: PadChest (Spain), 224px 12.89GB (Academic Torrents) — NOT the
+  1.07TB full set. Cross-site OOD only (NEATX PadChest chest-drains n=9, too few for tube-transfer).
+  V6 code built ahead of the download: data/padchest.py (schema-tolerant loader), report/run_v6.py
+  (NIH->PadChest AUC drop + DFR target-site adaptation), config/CLI, 5 loader tests.
+- 2026-07-09 — REPO-INTEGRITY FIX: the '.gitignore' rule 'data/' (for the dataset folder) also
+  matched src/auditor/data/, so the entire data-layer source (nih.py/neatx.py/torch_dataset.py/
+  padchest.py + __init__) had been UNTRACKED since Phase 0 — a fresh clone would not run. Anchored
+  the rule to /data/ and /experiments/ (repo-root only) and force-added the 5 recovered files;
+  verified dataset images/CSVs stay ignored. Repo is now actually reproducible.
