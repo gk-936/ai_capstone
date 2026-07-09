@@ -1,0 +1,17 @@
+# V6 — cross-site OOD: NIH-trained V1 model -> PadChest (Spain). Measure OOD AUC drop + DFR adapt.
+# Fill site2_images + padchest_labels_csv once the 12.89GB PadChest 224px set is downloaded.
+extends: base.yaml
+
+spike: v6_padchest
+
+data:
+  # PadChest 224px folder + its labels CSV (from the Academic Torrents set). NOT committed.
+  site2_images: ""              # e.g. "data/padchest_224/images"
+  padchest_labels_csv: ""       # e.g. "data/padchest_224/PADCHEST_chest_x_ray_images_labels.csv"
+
+# V1 clean pneumothorax checkpoint to evaluate cross-site.
+mitigation:
+  checkpoint: "experiments/v1_baseline/20260707_232704_9fbb04/artifacts/model_best.pth"
+
+v6_nih_auc_reference: 0.8448     # V1 in-distribution AUC
+data_padchest_max_rows: 0        # 0 = all; set e.g. 8000 for a quick first run

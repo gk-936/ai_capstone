@@ -19,10 +19,21 @@ def main() -> None:
     parser.add_argument("--predictions", default=None, help="Optional VLM predictions.jsonl.")
     parser.add_argument("--manifest", default=None, help="Manifest for the predictions.")
     parser.add_argument("--n-demo", type=int, default=3, help="Images in the demo figure.")
+    parser.add_argument("--v6", action="store_true", help="Run V6 cross-site OOD on PadChest.")
     args = parser.parse_args()
 
     cfg = load_config(args.config, overrides=args.override)
     logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
+
+    if args.v6:
+        from auditor.report.run_v6 import run_v6
+
+        metrics = run_v6(cfg, logger, checkpoint=cfg.mitigation.checkpoint,
+                         labels_csv=cfg.data.padchest_labels_csv,
+                         images_dir=cfg.data.site2_images)
+        logger.info(f"DONE V6: {metrics}")
+        return
+
     report = run_auditor(cfg, logger, confound=cfg.mitigation.confound,
                          checkpoint=cfg.mitigation.checkpoint,
                          predictions=args.predictions, manifest=args.manifest,

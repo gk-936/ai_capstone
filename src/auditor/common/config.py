@@ -27,6 +27,8 @@ class DataConfig(BaseModel):
     bbox_csv: str = Field(default="", description="Bounding-box CSV (region GT for V3).")
     tube_csv: str = Field(default="", description="NEATX chest-tube annotations CSV (V4b).")
     site2_root: str = Field(default="", description="Optional second-site root (V6).")
+    site2_images: str = Field(default="", description="PadChest 224px image folder (V6).")
+    padchest_labels_csv: str = Field(default="", description="PadChest labels CSV (V6).")
     image_size: int = 224
 
 
@@ -89,6 +91,9 @@ class Config(BaseModel):
     tube_train_enrich: float = 0.9  # V4b: fraction of TRAIN PTX-positives carrying a tube
     sweep_p_values: list[float] = Field(  # correlation-strength sweep points
         default_factory=lambda: [0.6, 0.7, 0.8, 0.9, 0.95])
+    # V6 cross-site (PadChest) settings
+    v6_nih_auc_reference: float = 0.8448     # known NIH in-distribution AUC (from V1)
+    data_padchest_max_rows: int = 0          # 0 = use all PadChest rows; >0 caps for quick runs
     data: DataConfig = Field(default_factory=DataConfig)
     train: TrainConfig = Field(default_factory=TrainConfig)
     shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)

@@ -1,6 +1,8 @@
 # Data & artifacts — never commit images, checkpoints, or run outputs
-data/
-experiments/
+# NOTE: anchored with a leading slash so this matches ONLY the repo-root data/ dataset folder,
+# NOT the source package src/auditor/data/.
+/data/
+/experiments/
 *.pth
 *.pt
 *.ckpt
