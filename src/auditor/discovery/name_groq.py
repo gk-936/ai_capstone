@@ -76,7 +76,8 @@ def _encode(image_path: Path) -> str:
     return base64.b64encode(image_path.read_bytes()).decode("ascii")
 
 
-# Persistent pointer into the key pool so a rate-limited key stays deprioritized across crops.
+# Persistent round-robin pointer into the key pool: advances on EVERY call so the keys share
+# load evenly (call i -> keys[i % n]), delaying when any single key nears its limit.
 _KEY_IDX = 0
 
 
@@ -84,8 +85,8 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6,
                   keys: list[str] | None = None) -> str:
     """Call the Groq vision model on one crop with the blind prompt; return the description.
 
-    On a 429, rotate to the next configured key and retry immediately; only sleep-and-back-off
-    once every key has 429'd within an attempt cycle (all rate-limited at once).
+    Round-robin across the key pool: each attempt uses the next key. Consecutive 429s are
+    counted; only once all keys have 429'd in a row do we sleep-and-back-off (all limited).
     """
     global _KEY_IDX
     keys = keys or _api_keys()
@@ -102,8 +103,10 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6,
         "temperature": 0.0,
         "max_tokens": 120,
     }
+    consecutive_429 = 0
     for attempt in range(max_retries):
         key = keys[_KEY_IDX % len(keys)]
+        _KEY_IDX += 1  # round-robin: advance for the next call regardless of outcome
         headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
         try:
             r = requests.post(f"{GROQ_BASE}/chat/completions", headers=headers,
@@ -115,19 +118,20 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6,
                   f"(attempt {attempt + 1}/{max_retries})")
             time.sleep(wait)
             continue
-        if r.status_code == 429:  # rate limited — rotate to the next key first
-            _KEY_IDX += 1
-            # If we've now cycled past all keys within this call, they're all limited: back off.
-            if len(keys) > 1 and (attempt + 1) % len(keys) != 0:
-                print(f"  [429] key#{(_KEY_IDX - 1) % len(keys) + 1} limited on {image_path.name}"
-                      f"; rotating to key#{_KEY_IDX % len(keys) + 1}")
+        if r.status_code == 429:  # rate limited — try the next key; back off only if ALL limited
+            consecutive_429 += 1
+            if consecutive_429 < len(keys):
+                print(f"  [429] a key limited on {image_path.name}; trying next key "
+                      f"({consecutive_429}/{len(keys)})")
                 continue
             retry_after = r.headers.get("retry-after")
             wait = float(retry_after) if retry_after else min(2 ** attempt * 3, 60)
             print(f"  [429] all {len(keys)} key(s) limited on {image_path.name}: "
                   f"backing off {wait:.1f}s (attempt {attempt + 1}/{max_retries})")
             time.sleep(wait)
+            consecutive_429 = 0  # reset after the cooldown
             continue
+        consecutive_429 = 0  # a non-429 response clears the streak
         if r.status_code >= 500:  # transient server error — retry
             wait = min(2 ** attempt * 2, 30)
             print(f"  [5xx] server {r.status_code} on {image_path.name}: retrying in {wait:.1f}s")
