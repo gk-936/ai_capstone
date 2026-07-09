@@ -20,6 +20,8 @@ def main() -> None:
                         help="Run ERM/JTT/DFR baseline table + variance (naming-off ablation).")
     parser.add_argument("--seeds", default="1337,7,42",
                         help="Comma-separated seeds for --phase3 variance.")
+    parser.add_argument("--sweep", action="store_true",
+                        help="Run the correlation-strength sweep (gap + DFR recovery vs p).")
     args = parser.parse_args()
     cfg = load_config(args.config, overrides=args.override)
     logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
@@ -30,6 +32,13 @@ def main() -> None:
         seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
         metrics = run_phase3(cfg, logger, seeds=seeds)
         logger.info(f"DONE phase3: {metrics}")
+        return
+
+    if args.sweep:
+        from auditor.mitigation.run_sweep import run_sweep
+
+        metrics = run_sweep(cfg, logger, p_values=cfg.sweep_p_values)
+        logger.info(f"DONE sweep: {len(metrics['rows'])} points")
         return
 
     metrics = run_v5(cfg, logger, confound=cfg.mitigation.confound,

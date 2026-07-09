@@ -87,6 +87,8 @@ class Config(BaseModel):
     spike: str = "unnamed"
     experiments_root: str = "experiments"
     tube_train_enrich: float = 0.9  # V4b: fraction of TRAIN PTX-positives carrying a tube
+    sweep_p_values: list[float] = Field(  # correlation-strength sweep points
+        default_factory=lambda: [0.6, 0.7, 0.8, 0.9, 0.95])
     data: DataConfig = Field(default_factory=DataConfig)
     train: TrainConfig = Field(default_factory=TrainConfig)
     shortcut: ShortcutConfig = Field(default_factory=ShortcutConfig)

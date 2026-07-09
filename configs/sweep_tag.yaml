@@ -1,0 +1,11 @@
+# Correlation-strength sweep: train the synthetic-tag model at several p, measure reliance gap
+# and DFR recovery vs p. Produces the gap-vs-p / recovery-vs-p figure data.
+extends: v2_shortcut.yaml
+
+spike: sweep_tag
+
+train:
+  epochs: 3          # a shortcut is learned fast
+  batch_size: 16
+
+sweep_p_values: [0.6, 0.7, 0.8, 0.9, 0.95]
