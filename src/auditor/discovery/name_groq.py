@@ -67,7 +67,16 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
     }
     headers = {"Authorization": f"Bearer {_api_key()}", "Content-Type": "application/json"}
     for attempt in range(max_retries):
-        r = requests.post(f"{GROQ_BASE}/chat/completions", headers=headers, json=payload, timeout=60)
+        try:
+            r = requests.post(f"{GROQ_BASE}/chat/completions", headers=headers,
+                              json=payload, timeout=60)
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            # Transient network drop (RemoteDisconnected, read timeout) — retry, don't crash.
+            wait = min(2 ** attempt * 2, 30)
+            print(f"  [net] {type(exc).__name__} on {image_path.name}: retrying in {wait:.1f}s "
+                  f"(attempt {attempt + 1}/{max_retries})")
+            time.sleep(wait)
+            continue
         if r.status_code == 429:  # rate limited — honor Retry-After, else exponential backoff
             retry_after = r.headers.get("retry-after")
             wait = float(retry_after) if retry_after else min(2 ** attempt * 3, 60)
@@ -76,9 +85,14 @@ def describe_crop(image_path: Path, model: str, max_retries: int = 6) -> str:
                   f"(attempt {attempt + 1}/{max_retries})")
             time.sleep(wait)
             continue
+        if r.status_code >= 500:  # transient server error — retry
+            wait = min(2 ** attempt * 2, 30)
+            print(f"  [5xx] server {r.status_code} on {image_path.name}: retrying in {wait:.1f}s")
+            time.sleep(wait)
+            continue
         r.raise_for_status()
         return r.json()["choices"][0]["message"]["content"].strip()
-    raise RuntimeError(f"rate-limited after {max_retries} retries on {image_path.name}")
+    raise RuntimeError(f"failed after {max_retries} retries on {image_path.name}")
 
 
 def _already_done(out_path: Path) -> set[str]:
