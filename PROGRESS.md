@@ -19,7 +19,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V3  | Saliency localizes confound? | >80% of positive crops | **PASS** | **tagged peak-in-box 100%** (control untagged 0.5%) | Grad-CAM on V2 ckpt, 200 imgs, layer features.norm5; control near-zero proves saliency follows the TAG not the corner; mass-frac 0.14 in a 0.8%-area box |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | **FAIL** | **P 0.57 / R 0.66 / halluc 0.50** | Llama-4-Scout on real tube crops. Halluc 50% is the killer: VLM fabricates tubes/central-lines/ETTs on half the tube-FREE controls (47/50 explicit device terms — genuine hallucination, audited, not matcher error). Also misses subtle real tubes (R .66). PIVOT TRIGGERED. |
-| V5  | Mitigation recovers accuracy? | worst-group up, ID stable | TODO | — | |
+| V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial: pure-shortcut model is hollow) | DFR last-layer retrain on group-balanced data. REAL-data mitigation is the anti-wrapper headline. |
 | V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | TODO | — | |
 
 **Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT to synthetic-only study.
@@ -85,3 +85,10 @@ bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot
   mitigate on synthetic confounds remains fully intact for the pivot study.
   NON-OLLAMA aside: local qwen2.5vl:3b was too unreliable (dropped image ~2/3 of calls) — a
   finding that capable models are required; Ollama path kept in repo for future use.
+- 2026-07-09 — V5 PASS (DFR mitigation). REAL tube confound (the paper headline): worst-group
+  (PTX-without-tube) 0.67->0.83, ID (PTX-with-tube) 0.96->0.97 (preserved), reliance gap
+  0.29->0.14 (halved). Clean DFR win on real data — a VLM wrapper cannot do this. Synthetic tag
+  (p=0.95 pure shortcut): gap 0.44->0.02 but ID 0.94->0.62 — a partial/cautionary result showing
+  a pure-shortcut model has little real signal to fall back on (informative, kept as the
+  companion case; no milder-p retrain needed since tube carries the ID-preservation result).
+  Fixed group_balanced_sample to handle the structurally-empty (tube=1,label=0) group.
