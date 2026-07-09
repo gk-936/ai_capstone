@@ -42,7 +42,11 @@ bounding where VLM naming transfers. Awaiting go-ahead to proceed with the pivot
 - [x] naming-off ablation ................. DONE (by construction: no method calls the VLM, yet
       worst-group recovers on the REAL tube -> the loop's value is NOT the VLM naming).
 - [x] multi-seed variance ................. DONE (3 seeds; ± std reported in the table).
-- [ ] synthetic correlation-strength sweep (optional)
+- [x] synthetic correlation-strength sweep ... PARTIAL (p=0.6/0.7/0.8 run + p=0.95 reused; p=0.9
+      pending, resumable). FINDING: shortcut has an ONSET THRESHOLD — trained reliance gap is
+      ~0 at p=0.6 (0.0003) and p=0.7 (0.010), rises at p=0.8 (0.075), and is large at p=0.95
+      (0.44). Below ~p=0.7 the model ignores the tag and learns real signal (test AUC ~0.83);
+      DFR only hurts when there's no shortcut to remove. Table: docs/writeup/sweep_partial_table.md
 - [ ] cross-site experiments (needs 2nd site / V6)
 - [ ] GroupDRO baseline (optional; needs train-time group labels)
 - [ ] contrast vs RoentMod (prompt-free, no generative fine-tuning, lower compute) — in CO1
