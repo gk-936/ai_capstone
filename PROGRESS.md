@@ -67,12 +67,18 @@ experiments complete. Remaining: writeup only.
       +0.082; source-DFR zero-shot null +0.005 -> distribution shift, not shown shortcut-driven)
 - [ ] GroupDRO baseline .................... SKIPPED (redundant with ERM/JTT/DFR table; decided)
 
-## Phase 4 — Evaluation + writeup (LOCKED)
-- [ ] consolidate metrics (worst-group acc, ID<->OOD gap, naming P/R, cost vs RoentMod)
-- [ ] limitations (naming reliability, incremental framing)
-- [ ] prior-art comparison table
-- [ ] social-implications section (cross-hospital risk, fairness, patient safety)
-- [ ] CO1–CO4 deliverables + paper draft (target: SCSL workshop / ML4H / applied short track)
+## Phase 4 — Evaluation + writeup
+- [x] consolidate metrics (worst-group acc, ID<->OOD gap, naming P/R, cost vs RoentMod) ... DONE
+      (CO3_experiments.md — full spike-by-spike table with final, corrected numbers)
+- [x] limitations (naming reliability, incremental framing) ... DONE (CO4_evaluation.md §4)
+- [x] prior-art comparison table ... DONE (CO1_related_work.md §4, re-searched through July 2026:
+      SpurLens, RaVL, MIMM-X, concurrent arXiv:2604.17110, HalluCXR, NEATX credited as data source)
+- [x] social-implications section (cross-hospital risk, fairness, patient safety) ... DONE
+      (CO4_evaluation.md §5-6)
+- [x] CO1-CO4 deliverables ... DONE, all in docs/writeup/. Two claims corrected post-review before
+      finalizing (hollow-shortcut; V6 mitigation) — see CO1 §6, CO4 §2, decision log below.
+- [ ] paper draft / venue submission (target: SCSL workshop / ML4H / applied short track) — beyond
+      the CO1-CO4 deliverables, not started
 
 ## Decision log
 - 2026-07-07 — framework: PyTorch + timm (DenseNet-121 @ 224px) — CXR standard, best Grad-CAM/DFR ecosystem.
@@ -151,3 +157,20 @@ experiments complete. Remaining: writeup only.
   result (candidate causes: scanner/population/label-pipeline/intensity/subset selection; shortcuts
   one unproven candidate). Dropped the earlier 'mitigation validated across THREE settings' claim.
   Scope: cross-site OOD only (PadChest chest-drains n=9, too few for tube-transfer).
+- 2026-07-11 — Exhaustive literature re-search through July 2026 (20 queries, 10 primary-source
+  fetches) found no medical-imaging paper doing blind general-VLM naming of a CXR shortcut scored
+  on P/R/control-hallucination, and no paper running a zero-shot source-side test of whether a
+  known shortcut explains a cross-site OOD gap — both flagged as this project's most defensible
+  novel contributions. New citations: SpurLens (arXiv:2503.08884), RaVL (arXiv:2411.04097),
+  MIMM-X (arXiv:2511.22990), a concurrent chest-drain-mitigation paper (arXiv:2604.17110, same
+  shortcut/different method), HalluCXR (arXiv:2605.20469, corroborates V4b hallucination),
+  "VLMs do not always need the image" (arXiv:2606.17710, a limitation for our own VLM step), and
+  NEATX credited explicitly as the data source (not just prior art).
+- 2026-07-11 — CO1-CO4 writeup completed in docs/writeup/. CO1 rewritten with the new literature
+  and final (corrected) results; CO2 documents the actual final architecture; CO3 is the full
+  spike-by-spike record with every measured number and the two corrections; CO4 states what the
+  evidence does and does not support, the two withdrawn claims and why, limitations (naming
+  boundary uncharacterized, VLM image-independence untested, non-expert tube labels, V6 causal
+  attribution unresolved, single-seed sweep, hardware scale), and patient-safety/fairness/
+  cross-hospital-risk discussion grounded in the measured numbers (tube-absent accuracy 0.67,
+  cross-site drop 0.192). 69 tests unaffected (writeup only, no code changes).
