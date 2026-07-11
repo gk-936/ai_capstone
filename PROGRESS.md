@@ -19,7 +19,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V3  | Saliency localizes confound? | >80% of positive crops | **PASS** | **tagged peak-in-box 100%** (control untagged 0.5%) | Grad-CAM on V2 ckpt, 200 imgs, layer features.norm5; control near-zero proves saliency follows the TAG not the corner; mass-frac 0.14 in a 0.8%-area box |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | **FAIL** | **P 0.57 / R 0.66 / halluc 0.50** | Llama-4-Scout on real tube crops. Halluc 50% is the killer: VLM fabricates tubes/central-lines/ETTs on half the tube-FREE controls (47/50 explicit device terms — genuine hallucination, audited, not matcher error). Also misses subtle real tubes (R .66). PIVOT TRIGGERED. |
-| V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial: pure-shortcut model is hollow) | DFR last-layer retrain on group-balanced data. REAL-data mitigation is the anti-wrapper headline. |
+| V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial) | DFR last-layer retrain on group-balanced data. The tag-model ID drop reflects DEGRADED (not absent) core features: a linear probe on its frozen backbone recovers pneumothorax AUC 0.690 (chance 0.50, clean V1 0.845) — shortcut reliance partially crowded out core learning, did not hollow it. REAL-data tube mitigation is the anti-wrapper headline. |
 | V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | **PASS** | **NIH 0.842 -> PadChest 0.650 (OOD drop 0.192); DFR adapt -> 0.732 (+0.082, ~43% of gap)** | Real NIH(US)->PadChest(Spain) cross-site. V1 clean model, 7,572-img PadChest subset (573 PTX-pos). Fix: PadChest 16-bit imgs converted to 8-bit at load (both sites same scale, model transform untouched) — NIH ref AUC preserved at 0.842 (confirms fix; earlier per-image-std attempt broke it to 0.59). DFR on a small PadChest subset recovers ~43% of the drop. |
 
 **Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT EXECUTED. V1-V3 + V4a PASS;
@@ -45,7 +45,8 @@ experiments complete. Remaining: writeup only.
 - [x] baselines ERM / JTT / DFR (3 seeds, mean±std) ... DONE
       TUBE (real): ERM 0.672 -> JTT 0.791 / DFR 0.790 worst-group (+0.12, ID held ~0.96); gain >> variance.
       TAG (pure shortcut): ERM 0.500 -> JTT/DFR ~0.61 worst-group but ID collapses 0.94->~0.60
-      (hollow-shortcut finding). Two baselines agree -> mitigation isn't a DFR quirk.
+      (degraded-core finding: linear probe recovers AUC 0.690, above chance 0.50 but below clean
+      0.845 — shortcut crowds out, not hollows, core features). Two baselines agree -> not a DFR quirk.
 - [x] naming-off ablation ................. DONE (by construction: no method calls the VLM, yet
       worst-group recovers on the REAL tube -> the loop's value is NOT the VLM naming).
 - [x] multi-seed variance ................. DONE (3 seeds; ± std reported in the table).
@@ -54,7 +55,9 @@ experiments complete. Remaining: writeup only.
       -> 0.294 (.9) -> 0.440 (.95). FINDINGS: (1) ONSET THRESHOLD — below ~p=0.7 the model ignores
       the tag and learns real signal (test AUC ~0.83); reliance then climbs steeply. (2) The
       DFR ID-drop is STRENGTH-DEPENDENT: negligible at low p (no shortcut), large at high p
-      (pure-shortcut model is hollow, ID 0.94->0.62 at p=.95). DFR raises worst-group across all p.
+      (strong-shortcut model has DEGRADED core features, ID 0.94->0.62 at p=.95; linear probe on
+      the frozen p=.95 backbone recovers pneumothorax AUC 0.690 vs clean 0.845 — real but reduced,
+      NOT hollow). DFR raises worst-group across all p.
       Figure: docs/writeup/sweep_figure.png; table: docs/writeup/sweep_final_table.md. Single seed.
 - [x] contrast vs RoentMod (prompt-free, no gen fine-tuning, lower compute) ... DONE (in CO1)
 - [x] cross-site experiments ............... DONE (V6: NIH->PadChest, drop 0.192, DFR recovers +0.082)

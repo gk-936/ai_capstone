@@ -22,9 +22,18 @@ def main() -> None:
                         help="Comma-separated seeds for --phase3 variance.")
     parser.add_argument("--sweep", action="store_true",
                         help="Run the correlation-strength sweep (gap + DFR recovery vs p).")
+    parser.add_argument("--probe", action="store_true",
+                        help="Linear probe on the frozen shortcut backbone (tests 'hollow' claim).")
     args = parser.parse_args()
     cfg = load_config(args.config, overrides=args.override)
     logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
+
+    if args.probe:
+        from auditor.mitigation.probe import run_probe
+
+        metrics = run_probe(cfg, logger, checkpoint=cfg.mitigation.checkpoint)
+        logger.info(f"DONE probe: {metrics}")
+        return
 
     if args.phase3:
         from auditor.mitigation.run_ablation import run_phase3
