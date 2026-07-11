@@ -20,14 +20,17 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | **FAIL** | **P 0.57 / R 0.66 / halluc 0.50** | Llama-4-Scout on real tube crops. Halluc 50% is the killer: VLM fabricates tubes/central-lines/ETTs on half the tube-FREE controls (47/50 explicit device terms — genuine hallucination, audited, not matcher error). Also misses subtle real tubes (R .66). PIVOT TRIGGERED. |
 | V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial) | DFR last-layer retrain on group-balanced data. The tag-model ID drop reflects DEGRADED (not absent) core features: a linear probe on its frozen backbone recovers pneumothorax AUC 0.690 (chance 0.50, clean V1 0.845) — shortcut reliance partially crowded out core learning, did not hollow it. REAL-data tube mitigation is the anti-wrapper headline. |
-| V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | **PASS** | **NIH 0.842 -> PadChest 0.650 (OOD drop 0.192); DFR adapt -> 0.732 (+0.082, ~43% of gap)** | Real NIH(US)->PadChest(Spain) cross-site. V1 clean model, 7,572-img PadChest subset (573 PTX-pos). Fix: PadChest 16-bit imgs converted to 8-bit at load (both sites same scale, model transform untouched) — NIH ref AUC preserved at 0.842 (confirms fix; earlier per-image-std attempt broke it to 0.59). DFR on a small PadChest subset recovers ~43% of the drop. |
+| V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | **PASS (drop) / reframed (narrowing)** | **NIH 0.842 -> PadChest 0.650 = OOD drop 0.192. Supervised target adaptation (last-layer fit on LABELED PadChest) -> 0.732 (+0.082). Source-DFR zero-shot (no target labels) -> +0.005 (NULL).** | Real NIH(US)->PadChest(Spain), V1 model, 7,572-img subset (573 PTX-pos). Normalization control: 16-bit->8-bit at load, NIH ref AUC preserved 0.842 (earlier per-image-std broke it to 0.59). HONEST FRAMING: (1) the +0.082 is SUPERVISED TARGET ADAPTATION, not shortcut mitigation — it uses PadChest labels and would help with no shortcut present. (2) The zero-shot source-DFR (reduce a real source shortcut, no target labels) gives +0.005 = null -> the drop is NOT primarily shortcut-driven. (3) The 0.192 drop is DISTRIBUTION SHIFT; candidate causes include scanner/population/label-pipeline differences (NIH-NLP vs PadChest-NLP+manual)/residual intensity/subset selection — shortcuts are ONE unproven candidate. Do NOT claim 'mitigation validated cross-site'. |
 
 **Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT EXECUTED. V1-V3 + V4a PASS;
 V4b (real device naming) fails on hallucination. Pivot done: auto-naming dropped as a claim for
 real confounds; project reframed as a controlled detect->localize->mitigate study on synthetic
 AND real confounds, with V4b as an honest negative result bounding where VLM naming transfers.
-Since the pivot: V5 PASS (real-tube mitigation), Phase-3 baselines+ablation+variance DONE,
-correlation sweep DONE, Phase-2 auditor loop built, V6 PASS (real cross-site OOD). ALL
+Since the pivot: V5 PASS (real-tube mitigation, the ONE clean cross-setting mitigation result —
+no test-distribution labels), Phase-3 baselines+ablation+variance DONE, correlation sweep DONE
+(+ linear probe: strong-shortcut backbone is DEGRADED not hollow, AUC 0.690), Phase-2 auditor
+loop built, V6 DONE (real cross-site OOD drop 0.192; supervised adaptation closes some of it but
+source-DFR zero-shot is null -> drop is distribution shift, not shown to be shortcut-driven). ALL
 experiments complete. Remaining: writeup only.
 
 ## Phase 2 — System build (unlocked post-pivot)
@@ -60,7 +63,8 @@ experiments complete. Remaining: writeup only.
       NOT hollow). DFR raises worst-group across all p.
       Figure: docs/writeup/sweep_figure.png; table: docs/writeup/sweep_final_table.md. Single seed.
 - [x] contrast vs RoentMod (prompt-free, no gen fine-tuning, lower compute) ... DONE (in CO1)
-- [x] cross-site experiments ............... DONE (V6: NIH->PadChest, drop 0.192, DFR recovers +0.082)
+- [x] cross-site experiments ............... DONE (V6: NIH->PadChest drop 0.192; supervised adapt
+      +0.082; source-DFR zero-shot null +0.005 -> distribution shift, not shown shortcut-driven)
 - [ ] GroupDRO baseline .................... SKIPPED (redundant with ERM/JTT/DFR table; decided)
 
 ## Phase 4 — Evaluation + writeup (LOCKED)
@@ -133,13 +137,17 @@ experiments complete. Remaining: writeup only.
   padchest.py + __init__) had been UNTRACKED since Phase 0 — a fresh clone would not run. Anchored
   the rule to /data/ and /experiments/ (repo-root only) and force-added the 5 recovered files;
   verified dataset images/CSVs stay ignored. Repo is now actually reproducible.
-- 2026-07-10 — V6 PASS (cross-site OOD, NIH US -> PadChest Spain). NIH ref AUC 0.842 -> PadChest
-  OOD AUC 0.650 (drop 0.192); DFR last-layer adapt on a small PadChest subset -> 0.732 (+0.082,
-  ~43% of the gap recovered). Disk was full (3.3GB) so extracted only the 7,572 V6-relevant images
-  (573 PTX-pos + 7k neg) from the 12.79GB tar, not the full 160k set. NORMALIZATION DEBUG: PadChest
-  images are 16-bit (0-58927) vs NIH 8-bit; first attempt (per-image-std at eval) broke the model
-  (NIH 0.83->0.59, train-eval mismatch) — reverted. Correct fix: convert PadChest 16-bit -> 8-bit
-  at load time (both sites on the 8-bit scale the model was trained on, transform untouched);
-  verified NIH ref AUC preserved at 0.842. Drop magnitude (~19pts) matches Zech et al. cross-site
-  findings. Mitigation now validated across THREE settings: synthetic tag, real tube (V5), real
-  cross-site (V6). Scope: cross-site OOD only (PadChest chest-drains n=9, too few for tube-transfer).
+- 2026-07-10/11 — V6 cross-site OOD (NIH US -> PadChest Spain). NIH ref AUC 0.842 -> PadChest OOD
+  AUC 0.650 (drop 0.192, matches Zech et al. cross-site magnitude). Disk was full (3.3GB) so
+  extracted only the 7,572 V6 images (573 PTX-pos + 7k neg) from the 12.79GB tar. NORMALIZATION
+  DEBUG: PadChest 16-bit (0-58927) vs NIH 8-bit; first attempt (per-image-std at eval) broke the
+  model (NIH 0.83->0.59, train-eval mismatch) — reverted. Correct fix: 16->8-bit at load
+  (transform untouched); NIH ref AUC preserved 0.842 (the control that validates the drop).
+  MITIGATION CLAIM CORRECTED (post-review): the +0.082 'recovery' was last-layer fit on LABELED
+  PadChest = SUPERVISED TARGET ADAPTATION, not shortcut mitigation (would help with no shortcut).
+  Ran the honest test — SOURCE-DFR ZERO-SHOT (reduce the real tube shortcut on NIH, no target
+  labels, eval PadChest): +0.005 = NULL. So reducing a known source shortcut does NOT improve
+  transfer -> the cross-site drop is NOT primarily shortcut-driven. V6 is a DISTRIBUTION-SHIFT
+  result (candidate causes: scanner/population/label-pipeline/intensity/subset selection; shortcuts
+  one unproven candidate). Dropped the earlier 'mitigation validated across THREE settings' claim.
+  Scope: cross-site OOD only (PadChest chest-drains n=9, too few for tube-transfer).

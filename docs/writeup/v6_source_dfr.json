@@ -1,0 +1,7 @@
+{
+  "mode": "source_dfr_zeroshot",
+  "padchest_before": 0.6505,
+  "padchest_after_source_dfr": 0.6551,
+  "zeroshot_change": 0.0046,
+  "n_test": 7572
+}
