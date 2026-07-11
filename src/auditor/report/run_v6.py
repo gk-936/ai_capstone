@@ -44,6 +44,63 @@ def _padchest_loader(index, split, images_dir, image_size, batch_size):
     return DataLoader(ds, batch_size=batch_size, num_workers=2, pin_memory=True)
 
 
+def run_v6_source_dfr_zeroshot(cfg: Config, logger: RunLogger, checkpoint: str,
+                               labels_csv: str, images_dir: str) -> dict:
+    """Zero-shot mitigation test: DFR on SOURCE (NIH tube groups), evaluate on PadChest.
+
+    Uses the tube-reliant model. DFR is fit ONLY on NIH data (tube x label balanced) — NO PadChest
+    labels touched — then PadChest AUC is compared before vs after. This tests whether reducing a
+    real SOURCE shortcut improves cross-site transfer, which the supervised-adaptation version of
+    V6 does NOT test. An honest result either way (may be null).
+    """
+    from auditor.data.neatx import build_tube_index
+    from auditor.mitigation.dfr import apply_dfr, extract_features, fit_dfr_head, group_balanced_sample
+    from auditor.data.nih import SplitIndex, make_dataset
+    import copy
+
+    set_seed(cfg.seed)
+    device = resolve_device(cfg.device)
+    logger.info(f"V6 SOURCE-DFR zero-shot: tube checkpoint={checkpoint}")
+
+    model = _build_model(cfg.train.backbone)
+    model.load_state_dict(torch.load(resolve_path(checkpoint), map_location=device))
+    model = model.to(device).eval()
+
+    # PadChest test set (labels only used for AUC scoring, never for fitting).
+    pc_index = build_padchest_index(cfg.data, labels_csv, seed=cfg.seed, dfr_frac=0.0,
+                                    max_rows=cfg.data_padchest_max_rows or None)
+    pc_test = _padchest_loader(pc_index, "test", images_dir, cfg.data.image_size, cfg.train.batch_size)
+    padchest_before = evaluate(model, pc_test, device)
+    logger.info(f"PadChest AUC (tube model, before source-DFR): {padchest_before:.4f}")
+
+    # SOURCE-side DFR: NIH tube-balanced groups, no target labels.
+    tube_index = build_tube_index(cfg.data, train_enrich=cfg.tube_train_enrich, seed=cfg.seed)
+    bal = group_balanced_sample(tube_index.subset("val"), "tube", "label",
+                                seed=cfg.seed, per_group=60)
+    sub = SplitIndex(df=bal.assign(split="dfr"), target="Pneumothorax", n_pos={})
+    ds = make_dataset(sub, "dfr", cfg.data, train=False)
+    from torch.utils.data import DataLoader as _DL
+    feats, labels = extract_features(model, _DL(ds, batch_size=cfg.train.batch_size,
+                                                num_workers=2, pin_memory=True), device)
+    m2 = copy.deepcopy(model)
+    w, b = fit_dfr_head(feats, labels, seed=cfg.seed)
+    apply_dfr(m2, w, b)
+    padchest_after = evaluate(m2, pc_test, device)
+    logger.info(f"PadChest AUC (after SOURCE-DFR, zero-shot): {padchest_after:.4f}")
+
+    metrics = {
+        "mode": "source_dfr_zeroshot",
+        "padchest_before": round(float(padchest_before), 4),
+        "padchest_after_source_dfr": round(float(padchest_after), 4),
+        "zeroshot_change": round(float(padchest_after) - float(padchest_before), 4),
+        "n_test": pc_index.n["test"]["n"],
+    }
+    (logger.run_dir / "v6_source_dfr.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    logger.log_metrics(**metrics)
+    logger.info(f"SOURCE-DFR RESULT: {metrics}")
+    return metrics
+
+
 def run_v6(cfg: Config, logger: RunLogger, checkpoint: str, labels_csv: str,
            images_dir: str) -> dict:
     set_seed(cfg.seed)

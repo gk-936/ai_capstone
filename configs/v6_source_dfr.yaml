@@ -1,0 +1,10 @@
+# V6 zero-shot mitigation test: source-DFR on the TUBE model (NIH tube groups), eval PadChest.
+# No PadChest labels used for fitting. Tests whether reducing a real SOURCE shortcut helps
+# cross-site transfer (the supervised-adaptation V6 does NOT test this).
+extends: v6_padchest.yaml
+
+spike: v6_source_dfr
+
+mitigation:
+  # The tube-reliant model (has a real shortcut to mitigate), not the V1 clean model.
+  checkpoint: "experiments/v4b_tube/20260708_204138_da03d8/artifacts/model_best.pth"
