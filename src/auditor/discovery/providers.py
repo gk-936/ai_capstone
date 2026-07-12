@@ -78,3 +78,78 @@ class OpenAICompatibleProvider(VLMProvider):
             r.raise_for_status()
             return r.json()["choices"][0]["message"]["content"].strip()
         raise RuntimeError(f"{self.name}: failed after {self.max_retries} retries on {Path(image_path).name}")
+
+
+_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+
+
+class GeminiProvider(VLMProvider):
+    """Google AI Studio generateContent (contents/parts + inline_data base64)."""
+
+    def __init__(self, env_var: str, model: str, max_retries: int = 6):
+        keys = load_keys(env_var)
+        if not keys:
+            raise RuntimeError(f"No keys in {env_var}; set it (comma-separated) in .env")
+        self.name = "gemini"
+        self.model = model
+        self.pool = KeyPool(keys)
+        self.max_retries = max_retries
+
+    def describe_crop(self, image_path: Path, prompt: str) -> str:
+        payload = {
+            "contents": [{"parts": [
+                {"text": prompt},
+                {"inline_data": {"mime_type": "image/png", "data": _b64(image_path)}},
+            ]}],
+            "generationConfig": {"temperature": 0.0, "maxOutputTokens": 160},
+        }
+        consecutive_429 = 0
+        for attempt in range(self.max_retries):
+            key = self.pool.current()
+            self.pool.rotate()
+            url = f"{_GEMINI_BASE}/{self.model}:generateContent"
+            try:
+                r = requests.post(url, params={"key": key},
+                                  headers={"Content-Type": "application/json"},
+                                  json=payload, timeout=60)
+            except (requests.ConnectionError, requests.Timeout):
+                time.sleep(min(2 ** attempt * 2, 30))
+                continue
+            if r.status_code == 429:
+                consecutive_429 += 1
+                if consecutive_429 < self.pool.size:
+                    continue
+                time.sleep(min(2 ** attempt * 3, 60))
+                consecutive_429 = 0
+                continue
+            consecutive_429 = 0
+            if r.status_code >= 500:
+                time.sleep(min(2 ** attempt * 2, 30))
+                continue
+            r.raise_for_status()
+            cands = r.json().get("candidates", [])
+            if not cands:
+                return ""
+            parts = cands[0].get("content", {}).get("parts", [{}])
+            return (parts[0].get("text", "") or "").strip()
+        raise RuntimeError(f"gemini: failed after {self.max_retries} retries on {Path(image_path).name}")
+
+
+# base URLs + env vars for the OpenAI-compatible providers
+_OPENAI_COMPAT = {
+    "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEYS"),
+    "github": ("https://models.inference.ai.azure.com", "GITHUB_TOKENS"),
+    "mistral": ("https://api.mistral.ai/v1", "MISTRAL_API_KEYS"),
+}
+
+
+def build_provider(spec: dict) -> VLMProvider:
+    """spec = {'provider': 'groq'|'github'|'mistral'|'gemini', 'model': <id>} -> provider."""
+    prov = spec["provider"]
+    model = spec["model"]
+    if prov == "gemini":
+        return GeminiProvider("GEMINI_API_KEYS", model)
+    if prov in _OPENAI_COMPAT:
+        base_url, env_var = _OPENAI_COMPAT[prov]
+        return OpenAICompatibleProvider(prov, base_url, env_var, model)
+    raise ValueError(f"unknown provider {prov!r}")

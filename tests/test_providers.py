@@ -80,3 +80,22 @@ def test_openai_provider_backs_off_when_all_keys_429(tmp_path, monkeypatch):
     assert out == "ok"
     # both keys 429'd (one full cycle) before success -> exactly one back-off sleep fired
     assert len(sleeps) == 1
+
+
+from auditor.discovery.providers import GeminiProvider, build_provider
+
+
+def test_gemini_provider_parses_candidates(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEYS", "gk1")
+    def fake_post(url, headers=None, json=None, timeout=None, params=None):
+        assert "generativelanguage.googleapis.com" in url
+        return _FakeResp(200, {"candidates": [{"content": {"parts": [{"text": "a line"}]}}]})
+    monkeypatch.setattr("auditor.discovery.providers.requests.post", fake_post)
+    prov = GeminiProvider("GEMINI_API_KEYS", "gemini-2.0-flash")
+    assert prov.describe_crop(_png(tmp_path), "describe") == "a line"
+
+
+def test_build_provider_routes_by_name(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEYS", "g1")
+    p = build_provider({"provider": "groq", "model": "m"})
+    assert p.name == "groq" and p.model == "m"
