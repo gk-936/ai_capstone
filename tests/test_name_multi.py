@@ -40,3 +40,15 @@ def test_name_all_multi_writes_and_resumes(tmp_path):
     prov2 = _StubProvider()
     r2 = name_all_multi(crops, manifest, out, prov2, "prompt")
     assert prov2.calls == 0 and r2["n_predictions"] == 2
+
+
+def test_comparison_table_lists_all_models():
+    from auditor.discovery.run_comparison import _comparison_table
+    rows = [
+        {"model": "scout", "precision": 0.57, "recall": 0.66, "control_hallucination": 0.50},
+        {"model": "gemini", "precision": 0.80, "recall": 0.70, "control_hallucination": 0.20},
+    ]
+    md = _comparison_table(rows)
+    assert "scout" in md and "gemini" in md
+    assert "precision" in md and "control-hallucination" in md
+    assert "0.500" in md  # scout hallucination rendered

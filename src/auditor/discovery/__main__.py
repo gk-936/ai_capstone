@@ -79,6 +79,27 @@ def _cmd_score(args) -> None:
     print(f"\n{tag} gate (P>={p_bar} & R>={r_bar} & halluc<.10): {'PASS' if gate else 'FAIL'}")
 
 
+def _cmd_name_multi(args) -> None:
+    _load_dotenv()
+    import yaml
+    from auditor.discovery.name_groq import BLIND_PROMPT
+    from auditor.discovery.name_multi import name_all_multi
+    from auditor.discovery.providers import build_provider
+    from auditor.discovery.score_naming import ABSTENTION_PROMPT
+
+    roster = yaml.safe_load(open(args.roster, encoding="utf-8"))["models"]
+    provider = build_provider(roster[args.model])
+    prompt = ABSTENTION_PROMPT if args.abstention else BLIND_PROMPT
+    name_all_multi(args.crops, args.manifest, args.out, provider, prompt, throttle_s=0.5)
+
+
+def _cmd_compare(args) -> None:
+    _load_dotenv()
+    from auditor.discovery.run_comparison import run_comparison
+
+    run_comparison(args.roster, args.crops, args.manifest, args.out_dir)
+
+
 def _cmd_list_models(args) -> None:
     _load_dotenv()
     from auditor.discovery.name_groq import list_models
@@ -136,6 +157,22 @@ def main() -> None:
     ps.add_argument("--confound", choices=["tag", "tube"], default="tag",
                     help="Which matcher: 'tag' (V4a) or 'tube' (V4b).")
     ps.set_defaults(func=_cmd_score)
+
+    pm = sub.add_parser("name-multi", help="Name crops via one roster model (multi-VLM).")
+    pm.add_argument("--roster", required=True, help="configs/multi_vlm.yaml")
+    pm.add_argument("--model", required=True, help="roster model name (e.g. gemini)")
+    pm.add_argument("--crops", required=True)
+    pm.add_argument("--manifest", required=True)
+    pm.add_argument("--out", required=True)
+    pm.add_argument("--abstention", action="store_true", help="use the abstention prompt")
+    pm.set_defaults(func=_cmd_name_multi)
+
+    pc = sub.add_parser("compare", help="Run all roster models + build the P/R/halluc table.")
+    pc.add_argument("--roster", required=True)
+    pc.add_argument("--crops", required=True)
+    pc.add_argument("--manifest", required=True)
+    pc.add_argument("--out-dir", required=True)
+    pc.set_defaults(func=_cmd_compare)
 
     args = parser.parse_args()
     args.func(args)
