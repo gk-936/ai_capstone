@@ -103,3 +103,12 @@ def test_abstention_suppresses_hedged_device_mentions():
     assert names_tube_abstention("possibly a line, cannot determine") is False
     # clean normal -> does not flag
     assert names_tube_abstention("Normal lung, no device.") is False
+
+
+# ------------------------- larger-crop ablation: config override -----------------------
+
+
+def test_crop_size_is_configurable():
+    from auditor.common.config import load_config
+    cfg = load_config("configs/v4b_tube.yaml", overrides=["discovery.crop_size=128"])
+    assert cfg.discovery.crop_size == 128
