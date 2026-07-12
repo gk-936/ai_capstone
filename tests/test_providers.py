@@ -99,3 +99,13 @@ def test_build_provider_routes_by_name(monkeypatch):
     monkeypatch.setenv("GROQ_API_KEYS", "g1")
     p = build_provider({"provider": "groq", "model": "m"})
     assert p.name == "groq" and p.model == "m"
+
+
+def test_gemini_empty_parts_returns_empty(tmp_path, monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEYS", "gk1")
+    def fake_post(url, headers=None, json=None, timeout=None, params=None):
+        return _FakeResp(200, {"candidates": [{"content": {"parts": []}}]})
+    monkeypatch.setattr("auditor.discovery.providers.requests.post", fake_post)
+    from auditor.discovery.providers import GeminiProvider
+    prov = GeminiProvider("GEMINI_API_KEYS", "gemini-2.0-flash")
+    assert prov.describe_crop(_png(tmp_path), "describe") == ""

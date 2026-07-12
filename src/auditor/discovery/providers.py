@@ -130,7 +130,9 @@ class GeminiProvider(VLMProvider):
             cands = r.json().get("candidates", [])
             if not cands:
                 return ""
-            parts = cands[0].get("content", {}).get("parts", [{}])
+            parts = cands[0].get("content", {}).get("parts", [])
+            if not parts:
+                return ""
             return (parts[0].get("text", "") or "").strip()
         raise RuntimeError(f"gemini: failed after {self.max_retries} retries on {Path(image_path).name}")
 
