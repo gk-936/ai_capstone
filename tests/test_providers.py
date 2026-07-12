@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 import pytest
 from auditor.discovery.providers import OpenAICompatibleProvider
@@ -63,3 +62,21 @@ def test_missing_keys_raises(tmp_path, monkeypatch):
     monkeypatch.delenv("FAKE_KEYS", raising=False)
     with pytest.raises(RuntimeError):
         OpenAICompatibleProvider("fake", "https://x/v1", "FAKE_KEYS", "model-x")
+
+
+def test_openai_provider_backs_off_when_all_keys_429(tmp_path, monkeypatch):
+    monkeypatch.setenv("FAKE_KEYS", "k1,k2")
+    sleeps = []
+    monkeypatch.setattr("auditor.discovery.providers.time.sleep", lambda s: sleeps.append(s))
+    responses = [_FakeResp(429), _FakeResp(429),
+                 _FakeResp(200, {"choices": [{"message": {"content": "ok"}}]})]
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        return responses.pop(0)
+
+    monkeypatch.setattr("auditor.discovery.providers.requests.post", fake_post)
+    prov = OpenAICompatibleProvider("fake", "https://x/v1", "FAKE_KEYS", "model-x")
+    out = prov.describe_crop(_png(tmp_path), "describe")
+    assert out == "ok"
+    # both keys 429'd (one full cycle) before success -> exactly one back-off sleep fired
+    assert len(sleeps) == 1
