@@ -70,6 +70,30 @@ def names_tube(description: str) -> bool:
     return False
 
 
+ABSTENTION_PROMPT = (
+    "This is a small region a diagnostic model focused on in a chest X-ray. "
+    "Only report an artificial device (tube, line, catheter, drain, wire) if you are confident "
+    "it is clearly present and not normal anatomy. If you are unsure, or it looks like normal "
+    "anatomy, answer exactly: 'normal, no device'. Be specific and concise."
+)
+
+_HEDGE_RE = re.compile(
+    r"\b(maybe|possibly|possible|might be|could be|may be|unclear|uncertain|"
+    r"cannot determine|can't determine|hard to tell|difficult to tell|appears to be|"
+    r"likely)\b", re.I,
+)
+
+
+def names_tube_abstention(description: str) -> bool:
+    """names_tube, but a hedged (low-confidence) device mention abstains (returns False).
+
+    Abstention ablation: suppress uncertain device claims to cut control-hallucination.
+    """
+    if not names_tube(description):
+        return False
+    return not _HEDGE_RE.search(description.lower())
+
+
 def score(manifest: list[dict], predictions: dict[str, str], matcher=names_confound) -> dict:
     """Compute precision, recall, control-hallucination over labelled crops.
 

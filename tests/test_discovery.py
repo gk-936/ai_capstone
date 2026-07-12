@@ -88,3 +88,18 @@ def test_missing_predictions_are_counted_not_scored():
     m = score(man, preds)
     assert m["n_missing_predictions"] == 1
     assert m["n_scored"] == 1
+
+
+# ------------------------------- abstention scoring (V4b+) -----
+
+from auditor.discovery.score_naming import names_tube_abstention
+
+
+def test_abstention_suppresses_hedged_device_mentions():
+    # confident device -> flags
+    assert names_tube_abstention("There is a chest tube.") is True
+    # hedged device -> abstains (does NOT flag) -> reduces hallucination
+    assert names_tube_abstention("There might be a catheter, but it is unclear.") is False
+    assert names_tube_abstention("possibly a line, cannot determine") is False
+    # clean normal -> does not flag
+    assert names_tube_abstention("Normal lung, no device.") is False
