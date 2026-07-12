@@ -1,0 +1,9 @@
+# Model roster for the Phase 2 multi-VLM naming study. Model ids are volatile — verify current
+# ids per provider (Groq: `python -m auditor.discovery list-models`; others via their docs) and
+# edit here without code changes.
+models:
+  scout:    {provider: groq,    model: "meta-llama/llama-4-scout-17b-16e-instruct"}
+  maverick: {provider: groq,    model: "meta-llama/llama-4-maverick-17b-128e-instruct"}
+  gemini:   {provider: gemini,  model: "gemini-2.0-flash"}
+  gpt4o:    {provider: github,  model: "gpt-4o"}
+  pixtral:  {provider: mistral, model: "pixtral-12b-2409"}
