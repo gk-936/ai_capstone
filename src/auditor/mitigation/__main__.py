@@ -24,6 +24,8 @@ def main() -> None:
                         help="Run the correlation-strength sweep (gap + DFR recovery vs p).")
     parser.add_argument("--probe", action="store_true",
                         help="Linear probe on the frozen shortcut backbone (tests 'hollow' claim).")
+    parser.add_argument("--sweep-variance", action="store_true",
+                        help="Seed-variance for the sweep DFR step on existing per-p checkpoints.")
     args = parser.parse_args()
     cfg = load_config(args.config, overrides=args.override)
     logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
@@ -48,6 +50,14 @@ def main() -> None:
 
         metrics = run_sweep(cfg, logger, p_values=cfg.sweep_p_values)
         logger.info(f"DONE sweep: {len(metrics['rows'])} points")
+        return
+
+    if args.sweep_variance:
+        from auditor.mitigation.run_sweep_variance import run_sweep_variance
+
+        seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
+        metrics = run_sweep_variance(cfg, logger, p_values=cfg.sweep_p_values, seeds=seeds)
+        logger.info(f"DONE sweep-variance: {len(metrics['rows'])} points")
         return
 
     metrics = run_v5(cfg, logger, confound=cfg.mitigation.confound,
