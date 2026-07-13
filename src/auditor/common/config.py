@@ -83,6 +83,13 @@ class MitigationConfig(BaseModel):
     checkpoint_tube: str = ""
 
 
+class AnalysisConfig(BaseModel):
+    """Phase 3 OOD-gap decomposition (label-free TTA) settings."""
+
+    tent_steps: int = 1        # TENT passes over the target set
+    tent_lr: float = 1e-3      # Adam LR for the BN affine params
+
+
 class Config(BaseModel):
     seed: int = 1337
     device: str = "cuda"  # falls back to cpu via resolve_device() if unavailable
@@ -100,6 +107,7 @@ class Config(BaseModel):
     attribution: AttributionConfig = Field(default_factory=AttributionConfig)
     discovery: DiscoveryConfig = Field(default_factory=DiscoveryConfig)
     mitigation: MitigationConfig = Field(default_factory=MitigationConfig)
+    analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
 
 
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:

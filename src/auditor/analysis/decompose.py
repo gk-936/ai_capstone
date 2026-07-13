@@ -53,5 +53,15 @@ def run_decompose(site_json: str, tta_jsons: list[str], label_json: str,
     out.mkdir(parents=True, exist_ok=True)
     (out / "decomposition.json").write_text(json.dumps(d, indent=2), encoding="utf-8")
     (out / "decomposition.md").write_text(md, encoding="utf-8")
-    print(md)
+    _print_safe(md)
     return d
+
+
+def _print_safe(text: str) -> None:
+    """Print unicode even on a legacy (cp1252) Windows console, without crashing."""
+    import sys
+
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        sys.stdout.buffer.write(text.encode("utf-8", "replace") + b"\n")
