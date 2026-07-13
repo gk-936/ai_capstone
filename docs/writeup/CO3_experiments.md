@@ -124,9 +124,9 @@ ablation**: the mitigation loop's worst-group recovery does not depend on the na
 ## 8. Correlation-strength sweep
 
 **Question:** how does induced reliance and its mitigability vary with confound strength p?
-**Result:** trained reliance gap rises **monotonically** with p (single seed per point,
+**Result:** trained reliance gap rises **monotonically** with p (single training seed per point,
 resumable run — the sweep was interrupted mid-run for travel and resumed cleanly, skipping the
-three already-completed points):
+three already-completed points; the DFR recovery step was subsequently re-run over 3 seeds, below):
 
 | p | reliance gap | worst-group before→after | ID before→after |
 |---|---|---|---|
@@ -143,6 +143,24 @@ clean V1). Reliance only becomes substantial above that threshold.
 is little shortcut to remove, so DFR mostly just costs accuracy for no gain; at high p, DFR's
 larger ID drop reflects the same "degraded, not hollow" phenomenon quantified by the linear probe,
 now shown to scale with how dominant the shortcut was allowed to become.
+
+**Finding 3 — the recovery is seed-stable, not a single-seed artifact.** The single-seed sweep
+above was criticised (fairly) for reporting one DFR run per point. As a follow-up, the DFR
+recovery step was re-run over **3 seeds** on the frozen per-p checkpoints (varying the
+group-balanced sampling + head fit only — the cheap, non-retraining part; training-seed variance
+would require full retraining and is not claimed):
+
+| p | trained gap | worst-group after DFR (mean ± std, n=3) | ID after DFR (mean ± std) |
+|---|---|---|---|
+| 0.6 | 0.000 | 0.674 ± 0.016 | 0.670 ± 0.018 |
+| 0.7 | 0.010 | 0.683 ± 0.015 | 0.667 ± 0.007 |
+| 0.8 | 0.075 | 0.673 ± 0.010 | 0.663 ± 0.025 |
+| 0.9 | 0.294 | 0.630 ± 0.017 | 0.655 ± 0.030 |
+| 0.95 | 0.440 | 0.609 ± 0.022 | 0.603 ± 0.014 |
+
+Every single-seed value in the table above falls within ≈1 std of these means (e.g. p=0.95:
+0.593 vs 0.609 ± 0.022), so the sweep's conclusions do not hinge on the seed. Run artifacts:
+`experiments/sweep_tag/20260712_133423_f7026c/sweep_variance.json`.
 
 Full figure: `docs/writeup/sweep_figure.png`; table: `docs/writeup/sweep_final_table.md`.
 
@@ -223,8 +241,9 @@ history with a message describing the measured result at the time.
 - Config-driven: every run's exact configuration is one of the fourteen `configs/*.yaml` files
   (or an `--override` on top of one), logged verbatim alongside its metrics.
 - Fixed seeds throughout; the one place stochasticity is reported honestly rather than hidden is
-  the correlation sweep and Phase-3 baseline table (single seed per sweep point; 3 seeds with
-  reported std for the baseline comparison — not claimed as more than that).
+  the correlation sweep and Phase-3 baseline table (single *training* seed per sweep point, but the
+  DFR recovery step at each point re-run over 3 seeds with reported std; 3 seeds with reported std
+  for the baseline comparison — not claimed as more than that).
 - Dataset paths are config values, never hardcoded; NIH, NEATX, and PadChest data live outside
   version control (`.gitignore`), while every line of source that reads them is tracked — a
   repo-integrity bug where the source package `src/auditor/data/` was accidentally caught by the
