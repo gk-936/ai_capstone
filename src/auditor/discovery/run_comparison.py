@@ -29,8 +29,9 @@ def run_comparison(roster_path, crops_dir, manifest_path, out_dir, prompt=BLIND_
     for name, spec in roster.items():
         try:
             provider = build_provider(spec)
-        except RuntimeError as e:
-            print(f"skip {name}: {e}")   # missing keys -> skip, do not fabricate
+        except (RuntimeError, ValueError) as e:
+            # RuntimeError -> missing keys; ValueError -> bad/unsupported provider name.
+            print(f"skip {name}: {e}")   # skip this model, do not fabricate or crash the loop
             continue
         preds = out_dir / f"predictions_{name}.jsonl"
         name_all_multi(crops_dir, manifest_path, preds, provider, prompt, throttle_s=0.5)

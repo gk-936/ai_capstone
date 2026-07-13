@@ -105,6 +105,12 @@ def test_abstention_suppresses_hedged_device_mentions():
     assert names_tube_abstention("Normal lung, no device.") is False
 
 
+def test_abstention_matcher_is_wired_into_scoring():
+    # regression: the --abstention ablation must be scorable end-to-end via confound=tube_abstention.
+    from auditor.discovery.score_naming import _MATCHERS, names_tube_abstention
+    assert _MATCHERS["tube_abstention"] is names_tube_abstention
+
+
 # ------------------------- larger-crop ablation: config override -----------------------
 
 

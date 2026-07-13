@@ -154,8 +154,9 @@ def main() -> None:
     ps = sub.add_parser("score", help="Score predictions.jsonl against manifest.json.")
     ps.add_argument("--manifest", required=True)
     ps.add_argument("--predictions", required=True)
-    ps.add_argument("--confound", choices=["tag", "tube"], default="tag",
-                    help="Which matcher: 'tag' (V4a) or 'tube' (V4b).")
+    ps.add_argument("--confound", choices=["tag", "tube", "tube_abstention"], default="tag",
+                    help="Matcher: 'tag' (V4a), 'tube' (V4b), or 'tube_abstention' "
+                         "(V4b hedge-suppressing, for the --abstention ablation).")
     ps.set_defaults(func=_cmd_score)
 
     pm = sub.add_parser("name-multi", help="Name crops via one roster model (multi-VLM).")

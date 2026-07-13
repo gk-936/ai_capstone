@@ -141,7 +141,7 @@ def score(manifest: list[dict], predictions: dict[str, str], matcher=names_confo
     }
 
 
-_MATCHERS = {"tag": names_confound, "tube": names_tube}
+_MATCHERS = {"tag": names_confound, "tube": names_tube, "tube_abstention": names_tube_abstention}
 
 
 def load_and_score(manifest_path: str | Path, predictions_path: str | Path,
