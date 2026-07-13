@@ -16,12 +16,13 @@ or was it model-specific?**
 ```
 GROQ_API_KEYS=key1,key2,key3
 GEMINI_API_KEYS=key1,key2
-GITHUB_TOKENS=tok1,tok2
 MISTRAL_API_KEYS=key1,key2
 ```
 Any provider whose key var is empty is **skipped automatically** — a partial roster still runs.
+GPT-4o (GitHub Models) is excluded from the roster since no `GITHUB_TOKENS` is provisioned; set
+that var and re-add the `gpt4o` row in `configs/multi_vlm.yaml` to include the proprietary anchor.
 
-## 2. The 6-model comparison table
+## 2. The multi-model comparison table (scout, maverick, gemini, pixtral)
 ```
 python -m auditor.discovery compare \
   --roster configs/multi_vlm.yaml \
