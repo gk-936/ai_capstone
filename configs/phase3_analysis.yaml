@@ -1,0 +1,7 @@
+# Phase 3 OOD-gap decomposition. Reuses the V6 PadChest paths + V1 checkpoint.
+extends: v6_padchest.yaml
+spike: phase3_analysis
+
+analysis:
+  tent_steps: 1        # TENT passes over the target set
+  tent_lr: 0.001       # Adam LR for BN affine params
