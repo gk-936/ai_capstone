@@ -27,7 +27,9 @@ The measured evidence supports a narrower, more defensible statement:
   19-point cross-site AUC drop, but the zero-shot, label-free test of whether reducing a known
   source shortcut narrows that drop returned a null result. **The project does not show that its
   mitigation method fixes cross-site generalization gaps** — only that a real gap exists and that
-  a specific attempt to explain it via one known shortcut did not pan out.
+  a specific attempt to explain it via one known shortcut did not pan out. A follow-up control-first
+  decomposition (Phase 3, §4) bounds two candidate causes of that gap near zero and leaves the
+  residual as genuine, unattributed distribution shift.
 - **A shortcut-reliant backbone retains real, if degraded, task-relevant features.** The linear
   probe (0.690 vs. chance 0.50, clean 0.845) means that even a strongly shortcut-reliant model is
   not "starting from nothing" for mitigation purposes — a practically useful fact for anyone
@@ -96,11 +98,37 @@ enrichment signal and a V5 mitigation target, but a noisier ground truth than a 
 segmentation (e.g., CANDID-PTX, which requires a completed ethics-training course we did not have
 time to obtain) would provide for V4b's precision/recall scoring specifically.
 
-**V6's causal attribution is genuinely unresolved.** As stated in CO3 §10, the cross-site drop's
-cause is not established by this project's design. This is not a limitation we can currently
-close within scope; a proper next step (isolating scanner effects, re-labeling PadChest with the
-NIH labeler, or a multi-site study with more than two sites) is future work, not something this
-capstone can retrofit.
+**V6's causal attribution is narrowed but not closed (Phase 3 decomposition).** As stated in
+CO3 §10, the cross-site drop's cause is not established by V6 alone. Phase 3 attacks it directly
+with three independent, control-first probes on the frozen V1 model, each reported whichever way
+its control fell — deliberately *not* as a clean additive partition of the 0.192 gap
+(`experiments/phase3/decomposition.json`):
+
+- **Ridden site-shortcut ≈ 0.** A hospital-detector probe classifies NIH vs. PadChest from the
+  frozen penultimate features at AUC **0.9993** — site identity is almost perfectly encoded. But
+  the falsifying control (project that site direction out of the PadChest features and re-score the
+  *frozen disease head*) leaves the disease AUC unchanged: **0.6436 → 0.6436 (Δ +0.000)**. Site is
+  massively present in the representation yet the disease head does not read it, so the slice of the
+  gap attributable to the head *riding* a site shortcut is bounded near zero. (This is a stronger,
+  representation-level restatement of V6's null source-DFR result.)
+- **Label-free covariate recovery ≈ 0.** Two label-free test-time-adaptation methods recover none
+  of the gap: BN-adaptation (re-estimating BatchNorm statistics on the target images) moves AUC by
+  **−0.004**, and TENT (entropy-minimizing the BN affine parameters) actively harms it
+  (**−0.122**, collapsing toward chance — the known TENT failure mode on a single-logit, imbalanced
+  head). Whatever the shift is, it is not correctable without target labels by these standard means.
+- **Label-composition mismatch, bounded qualitatively.** Among PadChest's 573 pneumothorax-positive
+  cases, only **15.7%** carry pneumothorax as the *sole* finding; the most common co-finding is a
+  **chest drain tube (109 cases, ≈19%)**, followed by other tubes and effusions. NIH labels several
+  of these separately, so cross-site label semantics genuinely differ in a direction that can
+  inflate the measured gap — but the working subset CSV lacks the projection/method fields needed to
+  quantify this, so it is bounded qualitatively rather than estimated.
+
+The honest reading: two mechanistic explanations one would reach for first — the disease head
+riding a decodable site signal, and a covariate shift that cheap label-free adaptation could undo —
+are both ruled *out*, and most of the 0.192 gap remains genuine, unattributed distribution shift.
+This narrows the space of explanations without closing it; a proper next step (isolating scanner
+effects, re-labeling PadChest with the NIH labeler, or a multi-site study with more than two sites)
+remains future work this capstone cannot retrofit.
 
 **Single-seed sweep; 3-seed baseline table.** The correlation-strength sweep (CO3 §8) is reported
 at one seed per point due to compute budget on a single consumer GPU; the trend (monotonic
@@ -138,7 +166,10 @@ institution's patient population in a way this project measured directly rather 
 the literature. That the specific mechanism (chest tube shortcut) was ruled out as the sole
 explanation is itself clinically relevant: it means institutions cannot assume that "fixing the
 known shortcuts" is sufficient due diligence before cross-site deployment — the residual gap after
-a targeted intervention was, in this case, almost the entire original gap. Combined with the
+a targeted intervention was, in this case, almost the entire original gap. The Phase 3
+decomposition (§4) sharpens this: neither a site signal the model rides nor a label-free-correctable
+covariate shift accounts for the drop, so the burden of cross-site re-validation cannot be
+discharged by shortcut removal or unsupervised adaptation alone. Combined with the
 non-expert-label limitation (§4), this project supports a conservative recommendation: cross-site
 performance drops should be treated as requiring site-specific validation, not resolved by a
 single mitigation technique applied once at the source institution.
