@@ -3,10 +3,13 @@ import yaml
 from pathlib import Path
 
 
-def test_roster_yaml_has_five_general_models():
+def test_roster_yaml_active_models_well_formed():
+    # Active roster after model-availability fixes: maverick retired from Groq, gpt4o excluded
+    # (no GitHub Models token). scout/pixtral completed the live study; gemini is deferred but
+    # kept in the roster as the intended third model.
     roster = yaml.safe_load(Path("configs/multi_vlm.yaml").read_text(encoding="utf-8"))
     models = roster["models"]
-    assert set(models) >= {"scout", "maverick", "gemini", "gpt4o", "pixtral"}
+    assert set(models) == {"scout", "pixtral", "gemini"}
     for name, spec in models.items():
         assert "provider" in spec and "model" in spec
 
