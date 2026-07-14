@@ -13,12 +13,15 @@ The measured evidence supports a narrower, more defensible statement:
 - **Detection and localization transfer from synthetic to real confounds.** V2/V3 (synthetic) and
   the tube-reliance/side-consistency measurements in V4b/V5 (real) both succeeded. This part of
   the pipeline generalizes.
-- **Naming does not reliably transfer.** V4a passed at a near-ceiling bar on an unambiguous
-  synthetic confound; V4b failed on a real device confound, specifically by *fabricating* devices
-  on clean images (control-hallucination 0.50) — the failure mode the project's precision-over-
-  recall design was built to catch, and it caught it. This is a **bounded capability**, not a
-  general one: naming should be trusted for salient, unambiguous shortcuts, and should not be
-  trusted for subtle real-world confounds without further validation (see §4).
+- **Naming does not reliably transfer, and the failure is not model-specific.** V4a passed at a
+  near-ceiling bar on an unambiguous synthetic confound; V4b failed on a real device confound,
+  specifically by *fabricating* devices on clean images (control-hallucination 0.50) — the failure
+  mode the project's precision-over-recall design was built to catch, and it caught it. A follow-up
+  multi-VLM replication (CO3 §6b) shows this is a property of general VLMs, not one model: on the
+  identical crops, Llama-4-Scout hallucinated devices on 55% of clean controls and Pixtral-12B on
+  83%. Naming is a **bounded capability**: trustworthy for salient, unambiguous shortcuts, not for
+  subtle real-world confounds, and off-the-shelf general VLMs should not be trusted as blind
+  auditors of clean images without a control-hallucination gate (see §4).
 - **Mitigation with no target labels works on a real confound.** V5's tube result (worst-group
   0.67→0.83, ID preserved) used no test-distribution labels and is corroborated by two
   independent methods (JTT and DFR) agreeing within a few points, well outside seed variance.
@@ -73,14 +76,18 @@ the control that could falsify it, and run that control first.**
 
 ## 4. Limitations
 
-**Naming reliability is bounded, and the boundary is not yet well characterized.** V4a and V4b
-are two points, not a curve — we know naming works on an unambiguous synthetic marker and fails
-on a subtle real device, but we do not know where between those extremes it starts to fail, or
-whether a different VLM, prompt, or crop resolution would shift that boundary. The project
-deliberately did not attempt to rescue V4b's precision/recall with prompt engineering, because
-CLAUDE.md's own design specified that a V4b failure (after V4a passed) triggers a pivot rather
-than iterative rescue — a principled stopping rule, but one that leaves the boundary
-uncharacterized rather than mapped.
+**Naming reliability is bounded, and the boundary along confound *difficulty* is not yet well
+characterized.** V4a and V4b are two points on the difficulty axis, not a curve — we know naming
+works on an unambiguous synthetic marker and fails on a subtle real device, but we do not know
+where between those extremes it starts to fail, or whether a different prompt or crop resolution
+would shift that boundary. What the multi-VLM replication (CO3 §6b) *did* add is the *cross-model*
+axis: the failure is not one model's quirk — two independent VLM families both fabricate devices on
+the majority of clean crops (55% and 83%). So the "different VLM would fix it" escape hatch is
+partially closed, while the "how subtle can the confound be before naming breaks" question remains
+open. The project deliberately did not attempt to rescue V4b's precision/recall with prompt
+engineering, because CLAUDE.md's own design specified that a V4b failure (after V4a passed)
+triggers a pivot rather than iterative rescue — a principled stopping rule, but one that leaves the
+difficulty boundary uncharacterized rather than mapped.
 
 **The auditor's own VLM component was not tested for image-independence.** A separate 2026 paper
 (arXiv:2606.17710, CO1 §2e) shows VLMs can answer chest-X-ray questions correctly from language

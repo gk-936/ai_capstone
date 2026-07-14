@@ -85,6 +85,40 @@ capability on real device confounds; the project continues as a detect→localiz
 on both synthetic and real confounds, with V4b reported as a bounded negative result rather than
 suppressed.
 
+### 6b. Multi-VLM replication — is the hallucination Scout-specific or general?
+
+**Question:** V4b showed one VLM (Llama-4-Scout) fabricating devices on clean crops. Is that a
+quirk of one model, or a property of general-purpose VLMs used as blind auditors? If the latter,
+it is a much stronger reason not to trust auto-naming.
+
+**Method:** the *identical* 200 V4b crops (100 tube-positive + 100 confound-free control), the
+*same* blind prompt, and the *same* conservative `names_tube` matcher, run through independent
+VLM families behind one provider abstraction (`configs/multi_vlm.yaml`; `python -m
+auditor.discovery compare`). Two models completed: Llama-4-Scout (Groq, a fresh run) and
+Pixtral-12B (Mistral). A third, Gemini (`gemini-flash-latest`), is deferred — Google's free tier
+caps `GenerateRequestsPerDayPerProjectPerModel` at ~20 requests/day/model, which cannot cover 200
+crops; it is noted as future work, not a result.
+
+| model | precision | recall | **control-hallucination** |
+|---|---|---|---|
+| Llama-4-Scout (Groq) | 0.545 | 0.660 | **0.550** |
+| Pixtral-12B (Mistral) | 0.494 | 0.810 | **0.830** |
+
+**Result: the failure generalizes and worsens.** Both independent VLMs fabricate a device on a
+majority of clean control crops (Scout 55%, Pixtral 83%). The Scout re-run (0.55) reproduces
+V4b's original 0.50 within run-to-run API/decoding drift; Pixtral is markedly worse. **Audited**
+(raw descriptions read against the matcher, per `claims-need-controls`): Scout invents specific
+devices on clean anatomy ("endotracheal tube," "central venous catheter"); Pixtral emits
+near-identical boilerplate ("linear radiopaque object… looks like a medical device or foreign
+body") on 83 of 100 control crops. This is genuine fabrication, not a matcher artifact — and the
+matcher is conservative on *positives* (it does not fire on hedged "linear artifacts"/"lines"
+phrasing), which depresses recall in the safe direction rather than inflating hallucination.
+
+**Interpretation.** The V4b bounded-negative is not model-specific: across two independent VLM
+families, an auditor built on off-the-shelf general VLMs would hallucinate a shortcut on 55–83% of
+clean images. This is exactly the false-alarm cost the project's precision-over-recall gate was
+designed to catch, now shown to be a cross-model property rather than a single-model accident.
+
 ## 7. V5 — Mitigation (Deep Feature Reweighting)
 
 **Question:** does last-layer retraining on confound-balanced data raise confound-conflicting
