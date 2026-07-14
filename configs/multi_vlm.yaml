@@ -4,6 +4,6 @@
 models:
   scout:    {provider: groq,    model: "meta-llama/llama-4-scout-17b-16e-instruct"}
   pixtral:  {provider: mistral, model: "pixtral-12b-2409"}
-  gemini:   {provider: gemini,  model: "gemini-2.5-flash"}  # last: free-tier rate-limited, resumable
+  gemini:   {provider: gemini,  model: "gemini-flash-latest"}  # last: free-tier rate-limited, resumable
   # maverick (groq) removed — retired from Groq; scout is the only vision-capable llama-4 there now.
   # gpt4o (provider: github) excluded — no GitHub Models token; re-add if GITHUB_TOKENS is set.
