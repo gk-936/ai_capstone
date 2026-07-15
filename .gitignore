@@ -13,6 +13,9 @@ predictions.jsonl
 # Secrets
 .env
 
+# Local operational state (e.g. per-machine daily API-quota tracking) — not project artifacts
+/.cache/
+
 # Python
 __pycache__/
 *.py[cod]

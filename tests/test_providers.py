@@ -1,5 +1,6 @@
 from pathlib import Path
 import pytest
+from auditor.discovery.key_pool import load_dead_keys
 from auditor.discovery.providers import OpenAICompatibleProvider
 
 
@@ -56,6 +57,57 @@ def test_openai_provider_rotates_key_on_429(tmp_path, monkeypatch):
     out = prov.describe_crop(_png(tmp_path), "describe")
     assert out == "ok"
     assert calls == ["Bearer k1", "Bearer k2"]  # rotated to the 2nd key
+
+
+def test_daily_quota_429_marks_key_dead_and_skips_it_for_rest_of_run(tmp_path, monkeypatch):
+    monkeypatch.setenv("FAKE_KEYS", "k1,k2")
+    dead_keys_path = tmp_path / "dead_keys.json"
+    calls = []
+
+    daily_quota_payload = {"error": {
+        "message": "Rate limit reached for model `x` on tokens per day (TPD): Limit 500000, Used 499999.",
+        "type": "tokens", "code": "rate_limit_exceeded"}}
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        calls.append(headers["Authorization"])
+        if headers["Authorization"] == "Bearer k1":
+            return _FakeResp(429, daily_quota_payload)
+        return _FakeResp(200, {"choices": [{"message": {"content": "ok"}}]})
+
+    monkeypatch.setattr("auditor.discovery.providers.requests.post", fake_post)
+    monkeypatch.setattr("auditor.discovery.providers.time.sleep", lambda s: None)
+    prov = OpenAICompatibleProvider("fake", "https://x/v1", "FAKE_KEYS", "model-x",
+                                    dead_keys_path=dead_keys_path)
+
+    out1 = prov.describe_crop(_png(tmp_path), "describe")
+    assert out1 == "ok"
+    assert calls == ["Bearer k1", "Bearer k2"]  # k1 hit the daily-quota 429 once
+
+    calls.clear()
+    out2 = prov.describe_crop(_png(tmp_path), "describe")
+    assert out2 == "ok"
+    assert calls == ["Bearer k2"]  # k1 skipped entirely this time — no wasted attempt
+
+    assert load_dead_keys(dead_keys_path, "fake") == {"k1"}
+
+
+def test_fresh_provider_loads_persisted_dead_keys(tmp_path, monkeypatch):
+    monkeypatch.setenv("FAKE_KEYS", "k1,k2")
+    dead_keys_path = tmp_path / "dead_keys.json"
+    from auditor.discovery.key_pool import record_dead_key
+    record_dead_key(dead_keys_path, "fake", "k1")
+
+    calls = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        calls.append(headers["Authorization"])
+        return _FakeResp(200, {"choices": [{"message": {"content": "ok"}}]})
+
+    monkeypatch.setattr("auditor.discovery.providers.requests.post", fake_post)
+    prov = OpenAICompatibleProvider("fake", "https://x/v1", "FAKE_KEYS", "model-x",
+                                    dead_keys_path=dead_keys_path)
+    prov.describe_crop(_png(tmp_path), "describe")
+    assert calls == ["Bearer k2"]  # k1 was already known-dead from a prior process
 
 
 def test_missing_keys_raises(tmp_path, monkeypatch):

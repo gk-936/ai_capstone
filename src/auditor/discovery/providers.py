@@ -12,11 +12,24 @@ from pathlib import Path
 
 import requests
 
-from auditor.discovery.key_pool import KeyPool, load_keys
+from auditor.common.paths import REPO_ROOT
+from auditor.discovery.key_pool import KeyPool, load_dead_keys, load_keys, record_dead_key
+
+_DEFAULT_DEAD_KEYS_PATH = REPO_ROOT / ".cache" / "dead_keys.json"
 
 
 def _b64(image_path: Path) -> str:
     return base64.b64encode(Path(image_path).read_bytes()).decode("ascii")
+
+
+def _is_daily_quota_error(response) -> bool:
+    """True if a 429 response is a DAILY (not per-minute) quota error — worth marking the
+    key dead for the rest of today rather than just rotating past it and retrying later."""
+    try:
+        message = str(response.json().get("error", {}).get("message", "")).lower()
+    except (ValueError, AttributeError):
+        return False
+    return "tokens per day" in message or "requests per day" in message or " tpd" in message
 
 
 class VLMProvider:
@@ -29,7 +42,8 @@ class VLMProvider:
 class OpenAICompatibleProvider(VLMProvider):
     """Groq / GitHub Models / Mistral — OpenAI chat/completions with a base64 image_url."""
 
-    def __init__(self, name: str, base_url: str, env_var: str, model: str, max_retries: int = 6):
+    def __init__(self, name: str, base_url: str, env_var: str, model: str, max_retries: int = 6,
+                dead_keys_path: str | Path = _DEFAULT_DEAD_KEYS_PATH):
         keys = load_keys(env_var)
         if not keys:
             raise RuntimeError(f"No keys in {env_var}; set it (comma-separated) in .env")
@@ -38,6 +52,9 @@ class OpenAICompatibleProvider(VLMProvider):
         self.model = model
         self.pool = KeyPool(keys)
         self.max_retries = max_retries
+        self.dead_keys_path = dead_keys_path
+        for key in load_dead_keys(dead_keys_path, name):
+            self.pool.mark_dead(key)
 
     def describe_crop(self, image_path: Path, prompt: str) -> str:
         payload = {
@@ -65,6 +82,10 @@ class OpenAICompatibleProvider(VLMProvider):
                 time.sleep(min(2 ** attempt * 2, 30))
                 continue
             if r.status_code == 429:
+                if _is_daily_quota_error(r):
+                    self.pool.mark_dead(key)
+                    record_dead_key(self.dead_keys_path, self.name, key)
+                    continue  # a dead key doesn't count toward the "all keys limited" backoff
                 consecutive_429 += 1
                 if consecutive_429 < self.pool.size:
                     continue
