@@ -68,14 +68,18 @@ def _cmd_score(args) -> None:
 
     metrics = load_and_score(args.manifest, args.predictions, confound=args.confound)
     print(json.dumps(metrics, indent=2))
-    # V4a (tag): P>=.90, R>=.90.  V4b (tube): P>=.80, R>=.70.  Both: hallucination <.10.
-    p_bar, r_bar = (0.90, 0.90) if args.confound == "tag" else (0.80, 0.70)
+    # V4a (tag/tag_grounding): P>=.90, R>=.90.  V4b (tube/tube_grounding): P>=.80, R>=.70.
+    # Both: hallucination <.10. *_grounding variants are Exp 3's grounding-aware matchers
+    # (see score_naming.py) -- same bars, informational only, not a re-litigation of the
+    # original V4a/V4b gate (which used the unmodified tag/tube matchers).
+    is_v4a = args.confound in ("tag", "tag_grounding")
+    p_bar, r_bar = (0.90, 0.90) if is_v4a else (0.80, 0.70)
     gate = (
         metrics["precision"] >= p_bar
         and metrics["recall"] >= r_bar
         and metrics["control_hallucination"] < 0.10
     )
-    tag = "V4a" if args.confound == "tag" else "V4b"
+    tag = "V4a" if is_v4a else "V4b"
     print(f"\n{tag} gate (P>={p_bar} & R>={r_bar} & halluc<.10): {'PASS' if gate else 'FAIL'}")
 
 
@@ -154,9 +158,12 @@ def main() -> None:
     ps = sub.add_parser("score", help="Score predictions.jsonl against manifest.json.")
     ps.add_argument("--manifest", required=True)
     ps.add_argument("--predictions", required=True)
-    ps.add_argument("--confound", choices=["tag", "tube", "tube_abstention"], default="tag",
-                    help="Matcher: 'tag' (V4a), 'tube' (V4b), or 'tube_abstention' "
-                         "(V4b hedge-suppressing, for the --abstention ablation).")
+    ps.add_argument("--confound", choices=["tag", "tube", "tube_abstention",
+                                           "tag_grounding", "tube_grounding"], default="tag",
+                    help="Matcher: 'tag' (V4a), 'tube' (V4b), 'tube_abstention' "
+                         "(V4b hedge-suppressing, for the --abstention ablation), or "
+                         "'tag_grounding'/'tube_grounding' (Exp 3: CheXagent's mixed "
+                         "grounding-token/free-text output -- see score_naming.py).")
     ps.set_defaults(func=_cmd_score)
 
     pm = sub.add_parser("name-multi", help="Name crops via one roster model (multi-VLM).")

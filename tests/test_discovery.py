@@ -118,3 +118,77 @@ def test_crop_size_is_configurable():
     from auditor.common.config import load_config
     cfg = load_config("configs/v4b_tube.yaml", overrides=["discovery.crop_size=128"])
     assert cfg.discovery.crop_size == 128
+
+
+# ------------------- grounding-format matchers (Exp 3: CheXagent specialist) -----------
+
+from auditor.discovery.score_naming import names_confound_grounding, names_tube_grounding
+
+
+def test_grounding_v4a_accepts_generic_object_labels():
+    # V4a-grounding mirrors names_confound's own genericness: no requirement the label
+    # specifically say "tag"/"marker" shape, just object+artificiality framing.
+    assert names_confound_grounding("<|ref|> foreign object <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is True
+    assert names_confound_grounding("<|ref|> artificial object <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is True
+    assert names_confound_grounding("<|ref|> foreign body <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is True
+
+
+def test_grounding_v4a_rejects_normal_anatomy_labels():
+    assert names_confound_grounding("<|ref|> diaphragm <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is False
+    assert names_confound_grounding("<|ref|> other lesion <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is False
+
+
+def test_grounding_v4b_requires_device_specific_vocabulary_not_bare_foreign_object():
+    # This is the key specificity requirement: a bare "foreign object" label must NOT
+    # count for V4b-grounding, even though it DOES count for V4a-grounding above --
+    # names_tube (prose) requires device-specific words, so its grounding equivalent must too,
+    # or CheXagent would be held to an easier bar than scout/pixtral on the same dataset.
+    assert names_tube_grounding("<|ref|> foreign object <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is False
+    assert names_tube_grounding("<|ref|> artificial object <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is False
+
+
+def test_grounding_v4b_accepts_device_specific_labels():
+    for label in ("chest tube", "catheter", "central line", "drain", "guide wire"):
+        desc = f"<|ref|> {label} <|/ref|> <|box|> (1,1),(2,2) <|/box|>"
+        assert names_tube_grounding(desc) is True, label
+
+
+def test_grounding_v4b_rejects_normal_anatomy_labels():
+    assert names_tube_grounding("<|ref|> diaphragm <|/ref|> <|box|> (1,1),(2,2) <|/box|>") is False
+
+
+def test_grounding_matchers_check_every_ref_segment_not_just_the_first():
+    # a crop can produce multiple <|ref|> segments (e.g. two box detections); a match on
+    # ANY segment should count, not just the first.
+    desc = "<|ref|> diaphragm <|/ref|> <|box|> (1,1),(2,2) <|/box|> <|ref|> foreign object <|/ref|> <|box|> (3,3),(4,4) <|/box|>"
+    assert names_confound_grounding(desc) is True
+    tube_desc = "<|ref|> diaphragm <|/ref|> <|box|> (1,1),(2,2) <|/box|> <|ref|> chest tube <|/ref|> <|box|> (3,3),(4,4) <|/box|>"
+    assert names_tube_grounding(tube_desc) is True
+
+
+def test_grounding_matchers_route_free_text_to_the_existing_prose_matcher():
+    # V4a's CheXagent output was a MIX of grounding-token and free-text responses per crop --
+    # a description with no <|ref|> tokens must fall through to the unmodified prose matcher,
+    # not be treated as grounding-format (and thus vacuously non-matching).
+    free_text_positive = "There is a white rectangular marker in the corner, clearly artificial."
+    assert names_confound(free_text_positive) is True  # sanity: prose matcher already agrees
+    assert names_confound_grounding(free_text_positive) is True
+
+    free_text_negative = "No artificial or non-anatomic structures detected."
+    assert names_confound_grounding(free_text_negative) is False
+
+    tube_free_text = "There is a chest tube visible in the right lung field."
+    assert names_tube_grounding(tube_free_text) is True
+
+
+def test_grounding_matchers_handle_empty_and_none():
+    assert names_confound_grounding("") is False
+    assert names_confound_grounding(None) is False
+    assert names_tube_grounding("") is False
+    assert names_tube_grounding(None) is False
+
+
+def test_grounding_matchers_wired_into_matchers_dict():
+    from auditor.discovery.score_naming import _MATCHERS
+    assert _MATCHERS["tag_grounding"] is names_confound_grounding
+    assert _MATCHERS["tube_grounding"] is names_tube_grounding

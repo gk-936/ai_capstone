@@ -94,6 +94,77 @@ def names_tube_abstention(description: str) -> bool:
     return not _HEDGE_RE.search(description.lower())
 
 
+# --- Exp 3: grounding-format matchers (CheXagent specialist) ---------------------------
+#
+# CheXagent-2 answers some crops in a REFERRING-EXPRESSION/GROUNDING format instead of
+# descriptive prose: "<|ref|> foreign object <|/ref|> <|box|> (20,1),(35,12) <|/box|>"
+# rather than "There is a bright rectangular marker...". names_confound/names_tube expect
+# prose (an OBJECT-word co-occurring with a BRIGHT/artificiality-word in the same
+# sentence) and do not fire reliably on bare categorical labels like "foreign object" --
+# confirmed empirically: even after adding "object" to the OBJECT word-list, "foreign
+# object" alone still never co-occurs with a BRIGHT-list word the way prose does, so the
+# co-occurrence rule itself is the mismatch, not a missing keyword.
+#
+# These are NEW, separate functions -- names_confound/names_tube are left untouched, since
+# they gated the original V4a/V4b PASS/FAIL decisions.
+
+_REF_LABEL_RE = re.compile(r"<\|ref\|>\s*(.*?)\s*<\|/ref\|>", re.I)
+
+# V4a-grounding label set: mirrors names_confound's own genericness -- an OBJECT+BRIGHT
+# co-occurrence with no requirement the object specifically be "tag"/"marker"-shaped, so
+# the grounding equivalent likewise accepts any generic foreign/artificial-object framing.
+_GROUNDING_TAG_LABEL_RE = re.compile(
+    r"^(foreign[- ]?object|foreign[- ]?body|artificial[- ]?(marker|object|structure|device)|"
+    r"non-?anatomical[- ]?(structure|object)|artefact|artifact)s?$",
+    re.I,
+)
+
+# V4b-grounding label set: mirrors names_tube's own DEVICE-SPECIFIC requirement -- a bare
+# "foreign object" label must NOT count here (that would be an easier bar than scout/
+# pixtral cleared on the same dataset, invalidating the specialist-vs-general comparison).
+_GROUNDING_TUBE_LABEL_RE = re.compile(
+    r"\b(chest[- ]?tube|chest[- ]?drain|drain|catheter|cannula|tubing|tube|line|wire|lead|"
+    r"pigtail|thoracostomy)\b",
+    re.I,
+)
+
+
+def _is_grounding_format(description: str) -> bool:
+    return bool(description) and bool(_REF_LABEL_RE.search(description))
+
+
+def _ref_labels(description: str) -> list[str]:
+    return [m.strip().lower() for m in _REF_LABEL_RE.findall(description)]
+
+
+def names_confound_grounding(description: str) -> bool:
+    """V4a matcher for CheXagent's mixed grounding-token / free-text output.
+
+    Per-crop format routing: a description containing <|ref|>...<|/ref|> tokens is scored
+    against a generic foreign/artificial-object label set (matching names_confound's own
+    genericness); a plain free-text description falls through to the UNMODIFIED
+    names_confound prose matcher, since some V4a crops came back as free text.
+    """
+    if not description:
+        return False
+    if _is_grounding_format(description):
+        return any(_GROUNDING_TAG_LABEL_RE.match(lbl) for lbl in _ref_labels(description))
+    return names_confound(description)
+
+
+def names_tube_grounding(description: str) -> bool:
+    """V4b matcher for CheXagent's grounding-token output (see names_confound_grounding).
+
+    Requires DEVICE-SPECIFIC vocabulary in the <|ref|> label itself, mirroring names_tube's
+    own specificity -- a bare "foreign object"/"artificial object" label does NOT count.
+    """
+    if not description:
+        return False
+    if _is_grounding_format(description):
+        return any(_GROUNDING_TUBE_LABEL_RE.search(lbl) for lbl in _ref_labels(description))
+    return names_tube(description)
+
+
 def score(manifest: list[dict], predictions: dict[str, str], matcher=names_confound) -> dict:
     """Compute precision, recall, control-hallucination over labelled crops.
 
@@ -141,7 +212,10 @@ def score(manifest: list[dict], predictions: dict[str, str], matcher=names_confo
     }
 
 
-_MATCHERS = {"tag": names_confound, "tube": names_tube, "tube_abstention": names_tube_abstention}
+_MATCHERS = {
+    "tag": names_confound, "tube": names_tube, "tube_abstention": names_tube_abstention,
+    "tag_grounding": names_confound_grounding, "tube_grounding": names_tube_grounding,
+}
 
 
 def load_and_score(manifest_path: str | Path, predictions_path: str | Path,
