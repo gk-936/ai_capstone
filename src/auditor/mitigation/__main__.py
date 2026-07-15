@@ -26,6 +26,8 @@ def main() -> None:
                         help="Linear probe on the frozen shortcut backbone (tests 'hollow' claim).")
     parser.add_argument("--sweep-variance", action="store_true",
                         help="Seed-variance for the sweep DFR step on existing per-p checkpoints.")
+    parser.add_argument("--canonical", action="store_true",
+                        help="Run canonical DFR refitting (C-tuning + 10-draw average).")
     args = parser.parse_args()
     cfg = load_config(args.config, overrides=args.override)
     logger = RunLogger(cfg.spike, cfg, experiments_root=cfg.experiments_root)
@@ -35,6 +37,14 @@ def main() -> None:
 
         metrics = run_probe(cfg, logger, checkpoint=cfg.mitigation.checkpoint)
         logger.info(f"DONE probe: {metrics}")
+        return
+
+    if args.canonical:
+        from auditor.mitigation.canonical_dfr import run_canonical_dfr
+
+        metrics = run_canonical_dfr(cfg, logger, confound=cfg.mitigation.confound,
+                                    checkpoint=cfg.mitigation.checkpoint)
+        logger.info(f"DONE canonical DFR: {metrics}")
         return
 
     if args.phase3:

@@ -267,8 +267,9 @@ these, not the established cause.
 | Sweep | (characterization) | onset ~p=0.7; monotone gap; strength-dependent ID cost |
 | V6 | drop exists + narrows | **PASS** (drop, 0.192) / **not supported** (narrowing — null zero-shot) |
 
-69 tests pass across the full codebase. Every commit referenced above is in the project's git
-history with a message describing the measured result at the time.
+The full test suite passes across the codebase (99 tests as of the extension-experiment phase;
+earlier writeups cite 69, from before the multi-VLM and extension work). Every commit referenced
+above is in the project's git history with a message describing the measured result at the time.
 
 ## 12. Reproducibility
 

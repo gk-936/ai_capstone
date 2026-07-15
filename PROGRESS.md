@@ -80,6 +80,49 @@ experiments complete. Remaining: writeup only.
 - [ ] paper draft / venue submission (target: SCSL workshop / ML4H / applied short track) — beyond
       the CO1-CO4 deliverables, not started
 
+## Phase 5 — Extension experiments (post-CO4, sharpening the naming-boundary contribution)
+Goal: move the V4b negative result from "it happens" toward "here is the boundary, and here is
+why." All run under the same validation-first discipline; report whatever the data shows.
+
+- [x] Five VLM-independent investigations ......... DONE (docs/writeup/investigation_1..4 + blocked #5)
+      (1) severity-stratified tube gap — gap severity-INVARIANT (~40-44pp), shortcut is device-
+      keyed not disease-burden-keyed; (2) canonical DFR (tuned C + 10-draw) — tube worst-group
+      0.84→0.93; tag "closes" only by collapsing ID (anomaly documented); (3) site-projection
+      re-decodability — rank-1 projection removes ~none of site signal (0.9993→0.9990), confirms
+      the earlier over-claim; (4) label-free OOD attribution on the tag — source-DFR HURTS
+      transfer (-0.083) vs tube's null (+0.005), tag is a near-total representation override;
+      (5) severity-AWARE mitigation — BLOCKED (severity labels exist only in the 94-img test
+      split; no fabricated proxy used).
+- [x] Exp 1 — naming-difficulty (opacity) curve ... DONE (docs/writeup/exp1_difficulty_curve.*)
+      Opacity produces a RECALL cliff (threshold ~0.25→0.5), NOT a hallucination cliff
+      (control-halluc flat: scout ~0.02, pixtral ~0.28-0.32 across all levels). Original
+      "fabrication rises with faintness" thesis RULED OUT on this axis. Contact-sheet visual
+      confirms the sweep behaves as claimed with no control leakage. Working thesis updated to
+      "anatomical plausibility of the confound category, not visibility."
+- [x] Exp 2 — image-independence (occlude relevant / irrelevant / swap) ... DONE, all 12/12
+      cells @ n=100 (docs/writeup/exp2_image_independence.*). Direction-broken-down (pos→neg
+      vs neg→pos, not just a combined rate). Methodology caveat: the gray occlusion fill itself
+      reads as an "artificial marker" to the V4a matcher, biasing V4a-relevant toward
+      "unchanged" — V4b's device-vocabulary matcher is clean of this. Interpretation (resting
+      only on V4b's clean relevant-vs-irrelevant contrast, not any V4a comparison): fabrication
+      is prior-driven OVER-READING of an ambiguous salient region, not blind image-independent
+      recitation — device-naming tracks the tube pixels (pos→neg 61-66% on relevant occlusion
+      vs 13-30% on irrelevant).
+- [x] Exp 3 — specialist-VLM arm (CheXagent-2-3B via Colab) ... DONE
+      (docs/writeup/exp3_specialist_vlm.md). CheXagent answers in its own grounding-token
+      format for most crops, not free text — the original prose matchers scored this near-zero
+      by format mismatch alone (confirmed empirically, not assumed); added SEPARATE
+      grounding-aware matchers (names_confound_grounding/names_tube_grounding, prose matchers
+      left untouched) matching each prose matcher's own specificity. Corrected numbers: V4a
+      P 0.9663/R 0.86/halluc 0.03 (near gate); V4b P/R/halluc all 0.0 — CheXagent's grounding
+      taxonomy has NO device-specific class at all (6 fixed labels total, none tube/catheter/
+      line/drain/wire), a real taxonomy-granularity finding, not a detection failure (it
+      produced grounding output on 100/100 V4b positives). Both old and new numbers reported
+      side by side; specialist-vs-general interpretation not yet drawn.
+- [ ] Bootstrap confidence intervals on existing prediction files .... TODO (cheap; no new runs)
+
+Test suite: **132 tests pass** as of this phase (earlier CO docs cite 69, pre-extension).
+
 ## Decision log
 - 2026-07-07 — framework: PyTorch + timm (DenseNet-121 @ 224px) — CXR standard, best Grad-CAM/DFR ecosystem.
 - 2026-07-07 — compute: local RTX 3050 6GB, AMP on, batch-size tuned to fit — for V1/V2/V3/V5.

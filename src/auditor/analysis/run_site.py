@@ -2,8 +2,9 @@
 
 Fits a probe on frozen features (NIH vs PadChest) and reports its AUC (A1). Then projects the
 site direction out of the PadChest disease-test features and re-scores the FROZEN disease head,
-reporting the OOD-AUC change (A2, the falsifying control). Reuses the V6 loaders and the DFR
-feature/head machinery so numbers stay comparable to V6.
+reporting the OOD-AUC change (A2, the falsifying control). A3 (Investigation 3) fits a FRESH
+probe on the projected features to measure residual site decodability after projection.
+Reuses the V6 loaders and the DFR feature/head machinery so numbers stay comparable to V6.
 """
 
 from __future__ import annotations
@@ -83,11 +84,25 @@ def run_site_analysis(cfg: Config, logger: RunLogger, checkpoint: str,
     after = float(roc_auc_score(pc_labels, score_features(pc_proj, w_dis, b_dis)))
     logger.info(f"A2 PadChest disease AUC before/after site-projection: {before:.4f} -> {after:.4f}")
 
+    # A3 (Investigation 3): fit a fresh site probe on the PROJECTED combined features.
+    # If projection fully removes the site direction, this AUC should collapse to ~0.5.
+    X_proj = np.concatenate([
+        project_out(nih_feats, w_site),
+        project_out(pc_feats, w_site),
+    ])
+    w_site_proj, b_site_proj = fit_dfr_head(X_proj[tr], y[tr], seed=cfg.seed)
+    site_residual_scores = score_features(X_proj[te], w_site_proj, b_site_proj)
+    site_residual_auc = float(roc_auc_score(y[te], site_residual_scores))
+    logger.info(f"A3 Residual site-probe AUC on projected features: {site_residual_auc:.4f} "
+                f"(original: {site_auc:.4f}, random baseline: 0.5000)")
+
     metrics = {
         "site_probe_auc": round(site_auc, 4),
         "padchest_disease_auc_before": round(before, 4),
         "padchest_disease_auc_after_projection": round(after, 4),
         "projection_change": round(after - before, 4),
+        "site_residual_auc_after_projection": round(site_residual_auc, 4),
+        "site_decodability_drop": round(site_auc - site_residual_auc, 4),
         "n_nih": int(len(nih_feats)), "n_padchest": int(len(pc_feats)),
     }
     (logger.run_dir / "site_analysis.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
