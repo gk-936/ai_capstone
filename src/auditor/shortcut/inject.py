@@ -24,9 +24,15 @@ _WHITE_NORMALIZED = torch.tensor([(1.0 - m) / s for m, s in zip(_MEAN, _STD)]).v
 
 
 def add_corner_tag(
-    x: torch.Tensor, corner: str = "top-left", size: int = 20, value: torch.Tensor | None = None
+    x: torch.Tensor, corner: str = "top-left", size: int = 20, value: torch.Tensor | None = None,
+    opacity: float = 1.0,
 ) -> torch.Tensor:
-    """Return a copy of a 3×H×W (normalized) image tensor with a bright square in `corner`."""
+    """Return a copy of a 3×H×W (normalized) image tensor with a bright square in `corner`.
+
+    `opacity` alpha-blends the tag value with the original pixels (1.0 = hard overwrite,
+    matching the original behavior exactly; 0.0 = no-op). Used by the V4a difficulty-curve
+    sweep to vary confound salience independently of size.
+    """
     if corner not in CORNERS:
         raise ValueError(f"corner must be one of {CORNERS}, got {corner!r}")
     if x.dim() != 3 or x.shape[0] != 3:
@@ -38,7 +44,7 @@ def add_corner_tag(
     s = min(size, h, w)
     ys = slice(0, s) if "top" in corner else slice(h - s, h)
     xs = slice(0, s) if "left" in corner else slice(w - s, w)
-    out[:, ys, xs] = val
+    out[:, ys, xs] = (1.0 - opacity) * out[:, ys, xs] + opacity * val
     return out
 
 

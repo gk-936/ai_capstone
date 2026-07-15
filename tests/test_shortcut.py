@@ -42,6 +42,27 @@ def test_each_corner_lands_where_expected():
         assert masked.abs().sum() == 0                 # nothing written outside it
 
 
+def test_opacity_one_matches_default_hard_overwrite():
+    x = torch.rand(3, 50, 50)
+    hard = add_corner_tag(x, corner="top-left", size=10)
+    blended = add_corner_tag(x, corner="top-left", size=10, opacity=1.0)
+    assert torch.allclose(hard, blended)
+
+
+def test_opacity_zero_is_a_no_op():
+    x = torch.rand(3, 50, 50)
+    out = add_corner_tag(x, corner="top-left", size=10, opacity=0.0)
+    assert torch.allclose(out, x)
+
+
+def test_opacity_blends_linearly():
+    x = torch.zeros(3, 50, 50)
+    out = add_corner_tag(x, corner="top-left", size=10, opacity=0.5)
+    expected = 0.5 * _WHITE_NORMALIZED.expand(3, 10, 10)
+    assert torch.allclose(out[:, :10, :10], expected)
+    assert out[:, 10:, :].abs().sum() == 0  # untouched outside the box
+
+
 def test_bad_shape_and_corner_raise():
     import pytest
 

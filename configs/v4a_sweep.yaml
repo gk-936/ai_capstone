@@ -1,0 +1,7 @@
+# Experiment 1 — V4a difficulty curve. Same tag confound as v4a_naming.yaml (same V2
+# checkpoint, same corner/size), but opacity is swept via --override discovery.opacity=<v>
+# to trace fabrication/P/R as a function of confound salience. size stays fixed at 20px
+# (the V2-validated size) so opacity is the sole varying axis.
+extends: v4a_naming.yaml
+
+spike: v4a_sweep

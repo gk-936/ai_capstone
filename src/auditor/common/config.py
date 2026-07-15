@@ -69,6 +69,7 @@ class DiscoveryConfig(BaseModel):
     crop_size: int = 64
     n_positive: int = 100      # salient crops from tagged positive images (contain the tag)
     n_control: int = 100       # crops from untagged images (confound-free)
+    opacity: float = 1.0       # V4a sweep: tag alpha-blend strength (1.0 = original hard tag)
     out_dir: str = ""          # where crops/ + manifest.json are written (default: run artifacts)
 
 

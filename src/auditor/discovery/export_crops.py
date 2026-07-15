@@ -60,7 +60,8 @@ def export_crops(cfg: Config, logger: RunLogger) -> dict:
     pos_ds = make_dataset(sub, "eval", cfg.data, train=False)
     for i in range(len(pos_ds)):
         x, _ = pos_ds[i]
-        x_tag = add_corner_tag(x, corner=cfg.shortcut.corner, size=cfg.shortcut.size)
+        x_tag = add_corner_tag(x, corner=cfg.shortcut.corner, size=cfg.shortcut.size,
+                               opacity=d.opacity)
         sal = compute_gradcam(model, x_tag, d.target_layer)
         crop = salient_crop(_denormalize(x_tag), sal, d.crop_size)
         cid = f"pos_{i:03d}"
