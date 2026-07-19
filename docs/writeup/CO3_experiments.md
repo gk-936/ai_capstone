@@ -94,10 +94,15 @@ it is a much stronger reason not to trust auto-naming.
 **Method:** the *identical* 200 V4b crops (100 tube-positive + 100 confound-free control), the
 *same* blind prompt, and the *same* conservative `names_tube` matcher, run through independent
 VLM families behind one provider abstraction (`configs/multi_vlm.yaml`; `python -m
-auditor.discovery compare`). Two models completed: Llama-4-Scout (Groq, a fresh run) and
-Pixtral-12B (Mistral). A third, Gemini (`gemini-flash-latest`), is deferred — Google's free tier
-caps `GenerateRequestsPerDayPerProjectPerModel` at ~20 requests/day/model, which cannot cover 200
-crops; it is noted as future work, not a result.
+auditor.discovery compare`). The original design (`docs/superpowers/specs/2026-07-11-...
+design.md`) specified a six-model roster: Scout, Maverick, Gemini, GPT-4o, Pixtral, and the
+CheXagent-2 specialist track. Two of those six never reached a run: Maverick was retired by Groq
+before it could be run (`configs/multi_vlm.yaml` comment), and GPT-4o was excluded for lack of a
+provisioned `GITHUB_TOKENS` value — both access constraints on a zero-budget project, disclosed
+here for completeness rather than left implicit. Two models completed: Llama-4-Scout (Groq, a
+fresh run) and Pixtral-12B (Mistral). A third, Gemini (`gemini-flash-latest`), is deferred —
+Google's free tier caps `GenerateRequestsPerDayPerProjectPerModel` at ~20 requests/day/model,
+which cannot cover 200 crops; it is noted as future work, not a result.
 
 | model | precision | recall | **control-hallucination** |
 |---|---|---|---|

@@ -1,0 +1,15 @@
+{
+  "padchest_before": 0.6504519344199509,
+  "padchest_after_source_dfr": 0.6550641614970176,
+  "zeroshot_change": 0.004612227077066766,
+  "zeroshot_change_ci95": [
+    -0.018243671434488174,
+    0.028029437389085875
+  ],
+  "n_test": 7572,
+  "bootstrap": {
+    "method": "paired stratified percentile bootstrap",
+    "n_resamples": 2000,
+    "seed": 1337
+  }
+}

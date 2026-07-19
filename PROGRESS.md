@@ -219,3 +219,18 @@ Test suite: **128 tests pass** (freshly verified against the pinned dependency e
   attribution unresolved, single-seed sweep, hardware scale), and patient-safety/fairness/
   cross-hospital-risk discussion grounded in the measured numbers (tube-absent accuracy 0.67,
   cross-site drop 0.192). 69 tests unaffected (writeup only, no code changes).
+- 2026-07-19 — THIRD CORRECTION (caught by an integrity-focused review pass, not self-caught like
+  the first two): CO4/paper claimed "we deliberately did not attempt to rescue V4b through prompt
+  engineering... a principled stopping rule." Git history contradicts this: a design spec
+  (2026-07-11) and commit `dd7ee3d` (2026-07-12) designed and implemented an abstention-prompt
+  ablation (`ABSTENTION_PROMPT`, `names_tube_abstention()`, unit-tested) specifically to test
+  whether hedge-suppression reduces V4b's control-hallucination. It was never executed — no output
+  file exists, and `docs/phase2_run.md` (2026-07-13) documents it as not-yet-run. Corrected in
+  CO4_evaluation.md and both paper drafts (markdown + LaTeX): the accurate statement is
+  "designed and built, not executed," not "never attempted." The V4b gate *decision* itself was
+  still governed by the pre-registered pivot rule (FAIL reported and acted on immediately); what
+  was inaccurate was implying that rule also foreclosed a follow-up ablation that was, in fact,
+  planned and coded. Running the existing abstention ablation against the existing V4b crops
+  remains a cheap, unexecuted follow-up (crops, prompt, and scorer all already exist) — deferred
+  pending confirmation that Groq/Mistral API access is still available before spending new API
+  quota on a new experimental result mid-writeup.

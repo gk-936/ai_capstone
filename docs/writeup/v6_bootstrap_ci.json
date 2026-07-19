@@ -1,0 +1,24 @@
+{
+  "nih_auc": 0.8423346797784776,
+  "nih_auc_ci95": [
+    0.8282543014781509,
+    0.856355996656595
+  ],
+  "padchest_auc_before": 0.6502931841633182,
+  "padchest_auc_ci95": [
+    0.6186935025775903,
+    0.680387954116215
+  ],
+  "ood_drop": 0.19204149561515949,
+  "ood_drop_ci95": [
+    0.1589040616002466,
+    0.22536913868091052
+  ],
+  "n_nih_test": 8000,
+  "n_padchest_test": 5289,
+  "bootstrap": {
+    "method": "stratified percentile bootstrap",
+    "n_resamples": 2000,
+    "seed": 1337
+  }
+}

@@ -32,9 +32,11 @@ which is exactly the false-alarm failure the design's precision-over-recall gate
 catch. What survives the naming failure is mitigation, which never depended on the VLM: Deep
 Feature Reweighting moves worst-group (pneumothorax-without-tube) accuracy from 0.67 to 0.79 as a
 3-seed mean while preserving in-distribution accuracy, using no target-distribution labels.
-Finally, a real US-to-Spain cross-site AUC drop of 0.192 exists, but a zero-shot, label-free test
-of whether reducing the known source shortcut narrows it returns null (+0.005); the drop is
-distribution shift this design cannot attribute to the shortcut. We report the naming failure as a
+Finally, a real US-to-Spain cross-site AUC drop of 0.192 (95% CI [0.159, 0.225], bootstrap) exists,
+but a zero-shot, label-free test of whether reducing the known source shortcut narrows it returns a
+point estimate indistinguishable from zero (+0.005, 95% CI [−0.018, +0.028]) — underpowered to rule
+out a small-to-moderate effect but not evidence of a real recovery either; the drop is distribution
+shift this design cannot attribute to the shortcut. We report the naming failure as a
 headline rather than a footnote, and we report two interpretive claims we withdrew after running
 their falsifying controls.
 
@@ -278,10 +280,14 @@ different things:
 
 Precision is gated above recall by design: for an auditor, a fabricated confound costs more than a
 missed one, since a tool that invents shortcuts is worse than no tool. The control-hallucination
-bar is measured separately and is the hardest to relax. Two general-purpose VLMs were run through
-the identical pipeline on the identical crops: **Llama-4-Scout** and **Pixtral-12B**. A third
-(Gemini) was not run to completion because its free tier caps daily requests per model below the
-200 crops required; it is not reported as a result.
+bar is measured separately and is the hardest to relax. The original design specified a six-model
+roster (Llama-4-Scout, Llama-4-Maverick, Gemini, GPT-4o, Pixtral-12B, and the specialist arm
+reported separately in §4.5); two of those six did not reach a result before the run: Maverick was
+retired by its provider (Groq) before it could be run, and GPT-4o was excluded for lack of a
+provisioned API token — both practical access constraints on a zero-budget project, not results.
+Two general-purpose VLMs were run through the identical pipeline on the identical crops:
+**Llama-4-Scout** and **Pixtral-12B**. A third (Gemini) was not run to completion because its free
+tier caps daily requests per model below the 200 crops required; it is not reported as a result.
 
 ### 3.7 V5 — mitigation
 
@@ -324,6 +330,15 @@ The codebase is organized into confound-agnostic modules (`data/`, `train/`, `sh
 `attribution/`, `discovery/`, `evaluation/`, `mitigation/`, `report/`) with 128 passing tests
 concentrated on the parts most likely to silently break: patient-disjointness of the loaders, the
 naming scorer's matchers (tested *not* to fire on generic anatomy), and the DFR group-balancing.
+
+**Compute cost.** All local training/evaluation ran on a single consumer GPU (RTX 3050, 6GB); the
+core reported runs (V1/V2/V3 training and attribution, the 3-seed Phase-3 baseline table, V5, V6)
+total approximately 2 GPU-hours by `run.log` timestamp (`docs/writeup/compute_cost.md`). The
+naming stage used 5,600 free-tier VLM API calls in total across the canonical V4a/V4b runs and
+every extension experiment (opacity sweep, occlusion study, multi-VLM and specialist arms); no
+generative model or fine-tuning step is used anywhere in the pipeline. This is the quantified basis
+for the compute-efficiency contrast drawn against RoentMod in Related Work — we report our own cost
+directly rather than estimate RoentMod's, which is not published in comparable units.
 
 ---
 
@@ -405,7 +420,11 @@ Mitigation, which does not depend on naming, holds on the real confound. DFR mov
 (pneumothorax-without-tube) accuracy **0.67 → 0.79 (3-seed mean; a single-draw run gives 0.83)**
 while in-distribution (pneumothorax-with-tube) accuracy is preserved **0.96 → 0.96**, narrowing the
 reliance gap **0.29 → 0.17**, using no test-distribution labels. Across 3 seeds, two independent
-methods agree and clear the ERM floor by roughly 12 points, far outside seed variance:
+methods agree and clear the ERM floor by roughly 12 points, far outside seed variance (paired
+t-test on the 3 seeds: DFR-vs-ERM p=0.030, JTT-vs-ERM p=0.041 — reported for completeness, but n=3
+gives this test little power beyond detecting a large, seed-consistent effect; the qualitative
+pattern that both methods beat ERM in *all three* seeds by a margin large relative to the observed
+seed spread is the stronger evidence here than either p-value alone):
 
 | confound | method | worst-group | ID | reliance gap |
 |---|---|---|---|---|
@@ -428,12 +447,18 @@ baseline (0.845). Shortcut reliance **degrades but does not eliminate** core-fea
 the degradation is strength-dependent.
 
 Cross-site, a real gap exists and is not explained by the shortcut. NIH reference AUC **0.842**
-falls to PadChest **0.650**, a drop of **0.192**, matching the magnitude reported by Zech et al.
-Supervised target adaptation recovers **+0.082** — but that is last-layer fitting on *labeled*
-PadChest and would help absent any shortcut, so it licenses no mitigation claim. The honest test,
-zero-shot source-DFR with no target labels touched, returns **+0.005: null**. Reducing a known real
-source-side shortcut does not improve cross-site transfer. The 0.192 drop is distribution shift
-whose cause this design cannot identify; shortcuts are one unproven candidate among scanner,
+falls to PadChest **0.650**, a drop of **0.192** (95% CI **[0.159, 0.225]**, stratified bootstrap,
+2,000 resamples over the exact test images), matching the magnitude reported by Zech et al. — a
+robust effect, not a borderline one. Supervised target adaptation recovers **+0.082** — but that is
+last-layer fitting on *labeled* PadChest and would help absent any shortcut, so it licenses no
+mitigation claim. The honest test, zero-shot source-DFR with no target labels touched, returns
+**+0.005** (95% CI **[−0.018, +0.028]**, same bootstrap procedure). The interval excludes a large
+recovery and includes zero, so the point estimate is not evidence of a real effect — but the
+interval is also wide enough that it does not tightly rule out a small-to-moderate one (up to
+roughly +0.03 AUC): this is an **underpowered null**, not a *tight* one, and we report it as such
+rather than as definitive proof that reducing a known real source-side shortcut cannot improve
+cross-site transfer. The 0.192 drop is distribution shift whose cause this design cannot identify;
+shortcuts are one unproven candidate among scanner,
 population, label-pipeline, residual-intensity, and subset-composition differences.
 
 ### 4.4 Mechanism — why naming breaks
@@ -632,9 +657,11 @@ signal alongside its shortcut while the tag model largely stops learning the dis
 confounds prove the *method* but systematically overstate the *severity* of the phenomenon relative
 to real ones, and should not be extrapolated to real shortcuts without the real-arm check.
 
-**Where reliance turns on: the correlation sweep.** Sweeping correlation strength *p* (single
-training seed per point), the reliance gap rises **monotonically** — 0.000 (p=.6) → 0.010 → 0.075 →
-0.294 → 0.440 (p=.95) — with an **onset threshold**: below p ≈ 0.7 the correlation is too weak to
+**Where reliance turns on: the correlation sweep.** Sweeping correlation strength *p* at **one
+training seed per point** (a limitation carried through to §6), the reliance gap rises
+monotonically **across these five single-seed runs** — 0.000 (p=.6) → 0.010 → 0.075 →
+0.294 → 0.440 (p=.95) — a trend, not yet a seed-replicated result at the training level, with an
+**onset threshold**: below p ≈ 0.7 the correlation is too weak to
 exploit and the model learns real signal (test AUC ≈ 0.83). DFR's in-distribution cost is
 correspondingly strength-dependent, negligible where there is no shortcut and large where it was
 allowed to dominate. The DFR-recovery step was re-run at 3 seeds on the frozen per-*p* checkpoints;
@@ -690,8 +717,11 @@ The cross-site result is where we most resist the tempting story. There is a rea
 AUC drop, Zech-magnitude, and it would be easy to present the loop as "validated cross-site." It is
 not. The supervised recovery (+0.082) uses PadChest labels and would help with no shortcut present;
 the honest zero-shot source-DFR test — reduce the *known* tube shortcut on NIH only, touch no target
-labels — returns +0.005, null. Reducing a known source shortcut does not narrow the cross-site gap,
-so the gap is distribution shift this design cannot attribute to the shortcut. The representation-level
+labels — returns +0.005 (95% CI [−0.018, +0.028]): a point estimate indistinguishable from zero, on
+an interval too wide to also rule out a small-to-moderate effect. Reducing a known source shortcut
+did not measurably narrow the cross-site gap in this test, so the gap is distribution shift this
+design cannot attribute to the shortcut — while acknowledging the test's power to detect a modest
+effect, had one existed, was limited. The representation-level
 controls corroborate rather than rescue this: site identity is almost perfectly decodable (AUC
 0.9993) yet the frozen disease head does not read it (Δ 0.000 after projecting site out), so the two
 mechanisms one reaches for first — a head riding a site signal, and a covariate shift correctable by
@@ -704,9 +734,11 @@ second site (PadChest), one real device confound (chest tube) with non-expert la
 (not specialist) VLMs. The two mechanism experiments bound the boundary on the visibility and
 image-grounding axes but do not map it along the plausibility axis the mechanism implicates — we
 know naming works on an unmistakable marker and fails on a subtle device, not where in between it
-turns over. That gap is a direct consequence of the pre-registered stopping rule: a V4b failure
-after a V4a pass triggers a pivot, not iterative prompt-engineering rescue. The boundary is
-therefore *characterized*, not *mapped*, by design.
+turns over. The pre-registered stopping rule governed the gate decision itself — a V4b failure
+after a V4a pass triggered an immediate, reported pivot rather than iteration on that decision — but
+it did not foreclose a cheap follow-up ablation (abstention prompting), which was designed and coded
+but not executed before this writeup (§6). The boundary is therefore *characterized*, not *mapped*,
+partly by design and partly because that follow-up remains unrun.
 
 ---
 
@@ -764,11 +796,17 @@ visibility as the axis along which naming degrades into fabrication, and the mul
 closes the "a different model would fix it" escape hatch for general-purpose VLMs (55% and 83%
 fabrication on clean crops). What remains open is where between an unambiguous synthetic marker and a
 subtle real device the boundary sits along the *plausibility* axis, and whether prompt design, crop
-resolution, or abstention/confidence mechanisms shift it. We deliberately did not attempt to rescue
-V4b through prompt engineering, because the pre-registered design specified that a V4b failure after
-a V4a pass triggers a pivot. That is a principled stopping rule, and it is also why the boundary is
-characterized rather than mapped. The specialist-VLM arm (§4.5) addresses the narrower question of
-whether radiology fine-tuning moves the boundary at all.
+resolution, or abstention/confidence mechanisms shift it. An abstention-prompt ablation targeting
+exactly this — suppress a device claim unless the model is confident it is not normal anatomy — was
+designed and implemented (`ABSTENTION_PROMPT`, `names_tube_abstention()`, unit-tested) as part of
+the multi-VLM study, but was not executed against the V4b crops before this writeup; we report it as
+built-but-unrun rather than as a considered decision not to attempt a rescue, since the design
+documents show the intent was to run it. Whether abstention would have moved V4b's control-
+hallucination is therefore an open, cheaply answerable question (the crops, prompt, and scorer
+already exist) rather than one closed by a stopping rule. The pre-registered pivot rule did govern
+the *headline* gate decision — V4b's FAIL was reported and acted on immediately rather than iterated
+around — and the specialist-VLM arm (§4.5) separately addresses whether radiology fine-tuning moves
+the boundary.
 
 **Interpretive claims corrected mid-project.** Two claims were written before the control that tests
 them existed, and both were withdrawn once it was run: "the pure-shortcut backbone is hollow"
@@ -833,4 +871,12 @@ accommodated by the confound-agnostic design without rework.
 - Sourget, Restrepo, Hudelot, Ferrante, Christodoulidis, Vakalopoulou (2025). arXiv:2507.21291.
 - Rafferty & Rajan (2026). arXiv:2509.15107.
 
-*(Two positioning-table cells remain unresolved in the source documents and are marked accordingly: the "uses report corpus?" status for HalluCXR and Zhao et al., and the identities of HalluCXR's six VLMs. Fill from the primary sources at venue-formatting time.)*
+*(The two positioning-table cells previously marked unresolved — the "uses report corpus?" status
+for HalluCXR and Zhao et al., and the identities of HalluCXR's six VLMs — were filled from the
+primary sources during venue-formatting (see `docs/paper/ieee_access/paper.tex`, Table 1 and its
+inline "% Source:" comments) and independently spot-checked against the arXiv abstracts/full text:
+HalluCXR uses radiologist reports supplementing CheXpert labels (confirmed); Zhao et al. uses a
+clinician's plain-language task description, not a report corpus (confirmed). HalluCXR's six-model
+list (BiomedCLIP, Gemini 3 Flash, GPT-5.1, InternVL2, LLaVA-NeXT-Mistral, Qwen2-VL) was sourced
+from the paper's models section and was not independently re-derivable from the abstract alone in
+this check — it should be re-verified once, against the full PDF, before final submission.)*

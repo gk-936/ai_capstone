@@ -84,10 +84,22 @@ would shift that boundary. What the multi-VLM replication (CO3 §6b) *did* add i
 axis: the failure is not one model's quirk — two independent VLM families both fabricate devices on
 the majority of clean crops (55% and 83%). So the "different VLM would fix it" escape hatch is
 partially closed, while the "how subtle can the confound be before naming breaks" question remains
-open. The project deliberately did not attempt to rescue V4b's precision/recall with prompt
-engineering, because CLAUDE.md's own design specified that a V4b failure (after V4a passed)
-triggers a pivot rather than iterative rescue — a principled stopping rule, but one that leaves the
-difficulty boundary uncharacterized rather than mapped.
+open. **Correction (this review pass):** an earlier version of this document, and of the paper
+draft, stated that the project "deliberately did not attempt to rescue V4b's precision/recall with
+prompt engineering." That is not accurate to the repository's own history. A design spec
+(`docs/superpowers/specs/2026-07-11-phase2-multi-vlm-naming-design.md`) explicitly proposed an
+abstention-prompt ablation to test whether hedge-suppression could reduce V4b's control-
+hallucination, and commit `dd7ee3d` (2026-07-12) implemented and unit-tested
+`ABSTENTION_PROMPT`/`names_tube_abstention()` for exactly that purpose. The ablation was never
+executed — `docs/phase2_run.md` (2026-07-13) documents the exact command to run it and states
+"nothing here has been run yet," and no output file exists in the repository. The correct
+statement is: **an abstention-prompt rescue attempt was designed and built, but not executed
+before the writeup**, not that it was never attempted. CLAUDE.md's stopping rule did govern the
+V4b gate *decision* itself — the FAIL was reported and the pivot executed immediately rather than
+iterated around — but it did not, in fact, prevent this follow-up ablation from being planned and
+coded; it was simply left unrun. This leaves the difficulty boundary uncharacterized rather than
+mapped, for a different reason than previously stated: not a rule that forbade the attempt, but an
+attempt that was built and not finished.
 
 **The auditor's own VLM component was not tested for image-independence.** A separate 2026 paper
 (arXiv:2606.17710, CO1 §2e) shows VLMs can answer chest-X-ray questions correctly from language
