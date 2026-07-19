@@ -126,8 +126,17 @@ accuracy without collapsing in-distribution accuracy?
 **Threshold:** worst-group accuracy rises with minimal in-distribution drop.
 
 **Real tube confound — the clean result.** Worst-group (pneumothorax-without-tube) accuracy
-**0.67 → 0.83**; in-distribution (pneumothorax-with-tube) accuracy **0.96 → 0.97** (preserved,
-not traded off); reliance gap **0.29 → 0.14**. This uses **no test-distribution labels** — DFR is
+**0.67 ± 0.02 → 0.79 ± 0.04**; in-distribution (pneumothorax-with-tube) accuracy
+**0.96 → 0.96** (preserved, not traded off); reliance gap **0.29 ± 0.02 → 0.17 ± 0.03**.
+
+Figures are mean ± sd over 3 seeds (1337/7/42) at `per_group=200`, standard DFR (C=1.0, single
+draw), from `experiments/phase3_baselines/20260709_104724_5a350b`; sd is population (ddof=0,
+n=3). A single-seed `per_group=60` run of the same method reports 0.67 → 0.83 / 0.96 → 0.97 /
+0.29 → 0.14 (`experiments/v5_dfr_tube/20260709_103059_9010ab`, and the seed-1337 row of the
+3-seed table also lands on 0.83); the 3-seed mean is cited here as the variance-defensible
+figure. See §7a for the draw-construction comparison that produces a third value.
+
+This uses **no test-distribution labels** — DFR is
 fit on a NIH-held-out group-balanced subset — making it the project's one unambiguous
 cross-setting mitigation claim.
 
@@ -267,9 +276,10 @@ these, not the established cause.
 | Sweep | (characterization) | onset ~p=0.7; monotone gap; strength-dependent ID cost |
 | V6 | drop exists + narrows | **PASS** (drop, 0.192) / **not supported** (narrowing — null zero-shot) |
 
-The full test suite passes across the codebase (99 tests as of the extension-experiment phase;
-earlier writeups cite 69, from before the multi-VLM and extension work). Every commit referenced
-above is in the project's git history with a message describing the measured result at the time.
+The full test suite passes across the codebase (128 tests, freshly verified against the pinned
+dependency environment; earlier writeups cite 69 or 99, from before the extension and specialist-VLM
+work). Every commit referenced above is in the project's git history with a message describing the
+measured result at the time.
 
 ## 12. Reproducibility
 

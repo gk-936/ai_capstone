@@ -19,7 +19,7 @@ Status legend: **TODO / IN-PROGRESS / PASS / FAIL / BLOCKED**
 | V3  | Saliency localizes confound? | >80% of positive crops | **PASS** | **tagged peak-in-box 100%** (control untagged 0.5%) | Grad-CAM on V2 ckpt, 200 imgs, layer features.norm5; control near-zero proves saliency follows the TAG not the corner; mass-frac 0.14 in a 0.8%-area box |
 | V4a | VLM names SYNTHETIC confound? | P>=.90 & R>=.90, ctrl-halluc <10% | **PASS** | **P 0.978 / R 0.90 / halluc 0.02** | Llama-4-Scout (Groq), blind prompt, 100 pos + 100 ctrl crops @32px. Recall exactly at bar: 10 genuine VLM misses. Matcher corrected mid-scoring (rectangular/opaque forms) — verified by full audit of all 23 orig misses; 2 ctrl FPs are real VLM hallucinations, correctly counted |
 | V4b | VLM names REAL device confound? | P>=.80 & R>=.70, ctrl-halluc <10% | **FAIL** | **P 0.57 / R 0.66 / halluc 0.50** | Llama-4-Scout on real tube crops. Halluc 50% is the killer: VLM fabricates tubes/central-lines/ETTs on half the tube-FREE controls (47/50 explicit device terms — genuine hallucination, audited, not matcher error). Also misses subtle real tubes (R .66). PIVOT TRIGGERED. |
-| V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.83, ID 0.96->0.97, gap 0.29->0.14** (clean). tag: gap 0.44->0.02 but ID 0.94->0.62 (partial) | DFR last-layer retrain on group-balanced data. The tag-model ID drop reflects DEGRADED (not absent) core features: a linear probe on its frozen backbone recovers pneumothorax AUC 0.690 (chance 0.50, clean V1 0.845) — shortcut reliance partially crowded out core learning, did not hollow it. REAL-data tube mitigation is the anti-wrapper headline. |
+| V5  | Mitigation recovers accuracy? | worst-group up, ID stable | **PASS** | **tube: 0.67->0.79 worst-group (3-seed mean; single-seed per_group=60 run gives 0.83), ID 0.96 held, gap 0.29->0.17** (clean). tag: gap 0.44->0.02 but ID 0.94->0.60 (partial) | DFR last-layer retrain on group-balanced data. Headline is the 3-seed mean (0.79) per CO3 §7; the 0.83 is a single-draw value, not suppressed but not the defended figure. The tag-model ID drop reflects DEGRADED (not absent) core features: a linear probe on its frozen backbone recovers pneumothorax AUC 0.690 (chance 0.50, clean V1 0.845) — shortcut reliance partially crowded out core learning, did not hollow it. REAL-data tube mitigation is the anti-wrapper headline. |
 | V6  | Real OOD gap exists + narrows? | measurable drop, narrowed | **PASS (drop) / reframed (narrowing)** | **NIH 0.842 -> PadChest 0.650 = OOD drop 0.192. Supervised target adaptation (last-layer fit on LABELED PadChest) -> 0.732 (+0.082). Source-DFR zero-shot (no target labels) -> +0.005 (NULL).** | Real NIH(US)->PadChest(Spain), V1 model, 7,572-img subset (573 PTX-pos). Normalization control: 16-bit->8-bit at load, NIH ref AUC preserved 0.842 (earlier per-image-std broke it to 0.59). HONEST FRAMING: (1) the +0.082 is SUPERVISED TARGET ADAPTATION, not shortcut mitigation — it uses PadChest labels and would help with no shortcut present. (2) The zero-shot source-DFR (reduce a real source shortcut, no target labels) gives +0.005 = null -> the drop is NOT primarily shortcut-driven. (3) The 0.192 drop is DISTRIBUTION SHIFT; candidate causes include scanner/population/label-pipeline differences (NIH-NLP vs PadChest-NLP+manual)/residual intensity/subset selection — shortcuts are ONE unproven candidate. Do NOT claim 'mitigation validated cross-site'. |
 
 **Green-light decision:** V4b FAILED (P.57/R.66/halluc.50) -> PIVOT EXECUTED. V1-V3 + V4a PASS;
@@ -85,8 +85,10 @@ Goal: move the V4b negative result from "it happens" toward "here is the boundar
 why." All run under the same validation-first discipline; report whatever the data shows.
 
 - [x] Five VLM-independent investigations ......... DONE (docs/writeup/investigation_1..4 + blocked #5)
-      (1) severity-stratified tube gap — gap severity-INVARIANT (~40-44pp), shortcut is device-
-      keyed not disease-burden-keyed; (2) canonical DFR (tuned C + 10-draw) — tube worst-group
+      (1) severity-stratified tube gap — large in both tiers (~40-44pp) but UNDERPOWERED at
+      n=16-20/group to tell invariance from a real severity effect (invariance claim withdrawn;
+      rules out a pure disease-burden proxy, since even low-severity shows a large gap);
+      (2) canonical DFR (tuned C + 10-draw) — tube worst-group
       0.84→0.93; tag "closes" only by collapsing ID (anomaly documented); (3) site-projection
       re-decodability — rank-1 projection removes ~none of site signal (0.9993→0.9990), confirms
       the earlier over-claim; (4) label-free OOD attribution on the tag — source-DFR HURTS
@@ -121,7 +123,7 @@ why." All run under the same validation-first discipline; report whatever the da
       side by side; specialist-vs-general interpretation not yet drawn.
 - [ ] Bootstrap confidence intervals on existing prediction files .... TODO (cheap; no new runs)
 
-Test suite: **132 tests pass** as of this phase (earlier CO docs cite 69, pre-extension).
+Test suite: **128 tests pass** (freshly verified against the pinned dependency environment; earlier docs cite 69/99/132 — 128 is the current, verified count).
 
 ## Decision log
 - 2026-07-07 — framework: PyTorch + timm (DenseNet-121 @ 224px) — CXR standard, best Grad-CAM/DFR ecosystem.

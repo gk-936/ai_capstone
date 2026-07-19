@@ -84,6 +84,73 @@ Implementation: `names_confound_grounding`/`names_tube_grounding` in
 modified by this addition. 20 tests added in `tests/test_discovery.py` covering both label
 sets, per-crop format routing, multi-segment `<|ref|>` handling, and the empty/None cases.
 
+## Additional VLMs — chexagent-8b, qwen2.5-vl-3b/7b, phi3.5-vision (measured 2026-07-18)
+
+Four more models were run on the identical V4a/V4b crops and blind prompt and scored with the
+**existing** project matchers only (no hand-scoring, no new matcher code). Manifests: V4a =
+`experiments/v4a_naming/20260708_105244_da01a4/manifest.json` (100 positive + 100 control),
+V4b = `experiments/v4b_tube/20260708_204951_3894b5/manifest.json` (100 positive + 100
+control). Predictions live under `experiments/exp3_specialist/predictions_<model>_v4{a,b}.jsonl`.
+
+**Which matcher is fair per model — determined by inspecting the raw predictions, not
+assumed.** Unlike CheXagent-2-3B, none of these four models emit CheXagent's
+`<|ref|>...<|/ref|>` grounding tokens (verified: 0 `<|ref|>` occurrences across all eight
+files). They answer (or fail to answer) in free-text prose. Because `names_confound_grounding`
+/`names_tube_grounding` route any description **without** `<|ref|>` tokens straight through to
+the unmodified prose matcher (`names_confound`/`names_tube`), the grounding matcher and the
+prose matcher return **identical numbers** for every one of these models. The **prose matcher
+is therefore the fair/primary one** for all four; the grounding column is reported per
+instruction and is identical by construction.
+
+Per-model raw output character (from inspecting the predictions):
+- **chexagent-8b** — free-text prose, radiology-report style ("No acute cardiopulmonary
+  process is observed."). On a share of crops it echoes the prompt back verbatim instead of
+  answering. Not grounding format.
+- **qwen2.5-vl-3b** — free-text prose, but **degenerate on V4a**: 164/200 responses are the
+  refusal "I'm sorry, but I cannot provide an answer as there is no image attached…" (the
+  image never reached the model). V4b responses are prose but near-constant boilerplate
+  ("no apparent artificial structures…"). Not grounding format.
+- **qwen2.5-vl-7b** — free-text prose, genuinely engages with the crop and names
+  artificial/foreign objects. Not grounding format.
+- **phi3.5-vision** — **empty string for all 200 crops in both arms** (200/200 blank
+  `"description": ""`). No usable output produced; every metric is 0 by construction. Not a
+  matcher issue — the file contains no text to score.
+
+| Model | Arm | Matcher | Precision | Recall | Control-halluc | Gate | n_scored (missing) |
+|---|---|---|---|---|---|---|---|
+| chexagent-8b | V4a | tag (prose, fair) | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| chexagent-8b | V4a | tag_grounding | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| chexagent-8b | V4b | tube (prose, fair) | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| chexagent-8b | V4b | tube_grounding | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| qwen2.5-vl-3b | V4a | tag (prose, fair) | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| qwen2.5-vl-3b | V4a | tag_grounding | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| qwen2.5-vl-3b | V4b | tube (prose, fair) | 0.0 | 0.0 | 0.01 | FAIL | 200 (0) |
+| qwen2.5-vl-3b | V4b | tube_grounding | 0.0 | 0.0 | 0.01 | FAIL | 200 (0) |
+| qwen2.5-vl-7b | V4a | tag (prose, fair) | 0.6346 | 0.33 | 0.19 | FAIL | 200 (0) |
+| qwen2.5-vl-7b | V4a | tag_grounding | 0.6346 | 0.33 | 0.19 | FAIL | 200 (0) |
+| qwen2.5-vl-7b | V4b | tube (prose, fair) | 0.50 | 0.74 | 0.74 | FAIL | 200 (0) |
+| qwen2.5-vl-7b | V4b | tube_grounding | 0.50 | 0.74 | 0.74 | FAIL | 200 (0) |
+| phi3.5-vision | V4a | tag (prose, fair) | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| phi3.5-vision | V4a | tag_grounding | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| phi3.5-vision | V4b | tube (prose, fair) | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+| phi3.5-vision | V4b | tube_grounding | 0.0 | 0.0 | 0.0 | FAIL | 200 (0) |
+
+Notes on the zeros, so they are not misread as identical failures of the same kind:
+- **chexagent-8b 0/0/0** — the model produced prose (radiology-report sentences and
+  prompt-echoes), but that prose never uses the marker/device vocabulary the matchers key on,
+  so recall is 0 with no false positives on controls either.
+- **qwen2.5-vl-3b 0/0** — V4a is a pipeline-level non-answer (image not delivered; 164/200
+  refusals), so the number reflects a broken run, not the model's perception. V4b is a
+  near-constant "nothing artificial here" boilerplate → 0 recall, 1/100 control false positive.
+- **phi3.5-vision 0/0/0** — empty output for every crop; nothing was scored beyond blanks. This
+  is a missing-output condition, not a matcher-vs-format mismatch.
+- **qwen2.5-vl-7b** is the only new model with non-trivial signal (V4a P=0.63/R=0.33, V4b
+  R=0.74) but fails every gate, with very high control-hallucination on V4b (0.74).
+
+All sixteen runs used `n_missing_predictions = 0` (every manifest id had a prediction row).
+No interpretation of specialist-vs-general is drawn here — numbers reported exactly as the
+scorer emitted them.
+
 ## Status
 
 Reported exactly as measured — no interpretation drawn on what these numbers mean for the

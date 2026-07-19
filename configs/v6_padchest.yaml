@@ -13,5 +13,4 @@ data:
 mitigation:
   checkpoint: "experiments/v1_baseline/20260707_232704_9fbb04/artifacts/model_best.pth"
 
-v6_nih_auc_reference: 0.8448     # V1 in-distribution AUC
 data_padchest_max_rows: 0        # 0 = all; set e.g. 8000 for a quick first run

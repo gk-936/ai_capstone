@@ -99,8 +99,12 @@ class Config(BaseModel):
     tube_train_enrich: float = 0.9  # V4b: fraction of TRAIN PTX-positives carrying a tube
     sweep_p_values: list[float] = Field(  # correlation-strength sweep points
         default_factory=lambda: [0.6, 0.7, 0.8, 0.9, 0.95])
-    # V6 cross-site (PadChest) settings
-    v6_nih_auc_reference: float = 0.8448     # known NIH in-distribution AUC (from V1)
+    # V6 cross-site (PadChest) settings.
+    # NOTE: the NIH in-distribution reference is MEASURED at run time by
+    # report/run_v6.py::_nih_reference_auc (same 8-bit loader as PadChest, test capped at 8000),
+    # not read from config. A hardcoded reference field previously lived here; it was unread and
+    # its value (V1's 0.8448, full 25.6k test, original loader) did not match what the code
+    # computes (0.8423), so it was removed rather than left to be mistaken for the real source.
     data_padchest_max_rows: int = 0          # 0 = use all PadChest rows; >0 caps for quick runs
     data: DataConfig = Field(default_factory=DataConfig)
     train: TrainConfig = Field(default_factory=TrainConfig)

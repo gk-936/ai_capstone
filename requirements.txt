@@ -1,26 +1,29 @@
 # Core DL stack — install torch matching your CUDA build separately if needed:
 #   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-torch
-torchvision
-timm
-grad-cam            # pytorch-grad-cam (V3 attribution)
+# Versions pinned to the working local environment (Python 3.9). torch/torchvision are
+# pinned to the base version only: the env has the +cu126 local build, and `==2.8.0` is
+# satisfied by `2.8.0+cu126` while still resolving from the CUDA index above.
+torch==2.8.0
+torchvision==0.23.0
+timm==1.0.27
+grad-cam==1.5.5     # pytorch-grad-cam (V3 attribution)
 
 # Data / metrics
-numpy<2            # pandas/scipy on this env are built against numpy 1.x (2.0 breaks ABI)
-pandas
-scikit-learn        # AUC and classification metrics
-pillow
+numpy==1.26.4       # pandas/scipy on this env are built against numpy 1.x (2.0 breaks ABI)
+pandas==2.0.3
+scikit-learn==1.6.1 # AUC and classification metrics
+pillow==10.4.0
 
 # Config / reproducibility
-pydantic>=2
-pyyaml
+pydantic==2.8.2
+pyyaml==6.0.3
 
 # Plotting / reporting
-matplotlib
+matplotlib==3.9.4
 
 # Dev
-pytest
-ruff
+pytest==8.4.2
+ruff                # NOT pinned: not installed in this env, so no version to pin to
 
 # NOTE: the open-weight VLM used in V4 (e.g. Qwen2-VL / LLaVA) is installed ONLY
 # inside the Colab/Kaggle notebook, not here — it will not fit on a 6GB local GPU.

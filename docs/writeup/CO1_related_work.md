@@ -93,7 +93,26 @@ generative apparatus we deliberately avoid.*
 cheap, last-layer-only, strong worst-group gains, and it doubles as a named baseline alongside
 ERM and JTT in our Phase 3 comparison table.*
 
-### 2d. VLM-based shortcut/spurious-correlation auditing (general domain — no CXR equivalent found)
+### 2d. Foundation-model shortcut/spurious-correlation auditing (closest analogues to our naming step)
+- **LADDER (Ghosh, Syed, Wang, Choudhary, Li, Poynton, Visweswaran, Batmanghelich — Findings of
+  ACL 2025, arXiv:2408.07832)** — *Language-Driven Slice Discovery and Error Rectification in
+  Vision Classifiers.* The **closest prior art to our naming step**, and the one we distinguish
+  most carefully: LADDER uses an LLM's latent domain knowledge to hypothesize a classifier's
+  biases **without pre-specified attribute labels**, and evaluates on radiology (**NIH-CXR**)
+  alongside mammography (RSNA, VinDr) and natural-image benchmarks (Waterbirds, CelebA,
+  MetaShift). Three differences make it a genuine neighbor rather than the same method: (i) **how
+  the image is read** — LADDER *captions* images to text (BLIP / GPT-4o) and projects model
+  activations into text via retrieval, then reasons with a **text-only LLM** over those sentences;
+  we instead feed the **Grad-CAM crop pixels directly to a general vision-language model**, with
+  no captioner, no report corpus, and no activation-to-text projection. (ii) **What is evaluated**
+  — LADDER scores discovery via slice Precision@10 and reports downstream **worst-group accuracy**
+  after error rectification; it has **no false-alarm / control-hallucination gate**. Our
+  contribution is precisely to score the *named* confound on precision/recall **and** hallucination
+  on confound-free control crops, because for an auditor a fabricated shortcut is worse than a
+  missed one. (iii) **What question is asked** — LADDER's discovery is in service of mitigation;
+  our naming step is evaluated as an end in itself ("can a blind VLM be trusted to name this
+  shortcut?") and reports a **hard failure** on the real device confound (V4b), a negative result
+  LADDER's mitigation-oriented evaluation is not designed to surface.
 - **SpurLens (Hosseini, Nawathe, Moayeri, Balasubramanian, Feizi — arXiv:2503.08884, 2025)** —
   uses GPT-4 plus open-set object detectors to automatically discover spurious visual cues that
   multimodal LLMs over-rely on in natural images, and separately measures **hallucination
@@ -119,12 +138,13 @@ ERM and JTT in our Phase 3 comparison table.*
 - Grad-CAM-style attribution (Selvaraju et al.) localizes *where* a model looks — our V3 uses it
   — but does not **name** what it found.
 
-*Exhaustive search (20 queries, 10 primary-source fetches, through July 2026) found no
-medical-imaging paper that feeds attribution crops from a chest-X-ray classifier to a
-general-purpose, blind-prompted VLM and scores the resulting name against ground truth with a
-precision/recall/control-hallucination metric. This specific niche — prompt-free naming, scored
-with a false-alarm-averse metric, in the medical-imaging setting — remains open as of this
-writing.*
+*Exhaustive search (through July 2026) found LADDER (above) to be the nearest medical-imaging
+analogue — LLM-driven, label-free bias naming evaluated partly on chest X-rays — but no paper
+that (a) feeds a chest-X-ray classifier's **attribution crops** to a **general-purpose,
+blind-prompted VLM** (rather than captioning them to a text LLM) and (b) scores the resulting
+name against ground truth on a **precision/recall + control-hallucination** metric. This specific
+niche — pixel-level blind naming, gated by a false-alarm-averse metric — remains open; LADDER is
+the closest, and differs on both (a) and (b).*
 
 ### 2e. VLM reliability on chest radiographs (bears directly on our V4a/V4b results)
 - **HalluCXR (Wang & Li, King's College London — arXiv:2605.20469, May 2026)** — benchmarks 6
@@ -206,6 +226,12 @@ fails, or is inconclusive. Positioned against the closest work:
   precision-over-recall, hallucination-bounded metric — and report, rather than hide, that
   automation **fails** on the real-device case (V4b), which none of the manual-diagnosis papers
   needed to risk.
+- **vs LADDER (closest label-free naming prior art):** both name a classifier's shortcut using a
+  foundation model without pre-specified attribute labels, in radiology. LADDER routes the image
+  through a **captioner + text-LLM** and evaluates via worst-group accuracy after rectification;
+  we route the **saliency crop through a VLM directly** and evaluate the *name itself* with a
+  control-hallucination gate — which is what let us **measure and report the naming failure (V4b)**
+  that a mitigation-only evaluation would never have to expose.
 - **vs SpurLens / RaVL (general-domain VLM auditing):** both are the closest *mechanism*
   analogues (automated, largely prompt-free shortcut discovery via a VLM/LLM), but neither
   touches medical imaging, blind clinical naming, or a control-hallucination-gated metric — the
@@ -249,6 +275,7 @@ DFR mitigation results, which have concurrent and prior art.
 - Liu et al. (2021), JTT — arXiv:2107.09044
 - Kirichenko et al. (2022), DFR — arXiv:2204.02937 · follow-up arXiv:2308.00473 · arXiv:2409.14637
 - Zhao, Hauke, De Castilhos, Bode, Kather, Nebelung, Truhn (2026) — arXiv:2604.17110
+- Ghosh, Syed, Wang, Choudhary, Li, Poynton, Visweswaran, Batmanghelich (2025), LADDER — Findings of ACL 2025, arXiv:2408.07832
 - Hosseini, Nawathe, Moayeri, Balasubramanian, Feizi (2025), SpurLens — arXiv:2503.08884
 - Varma, Delbrouck, Chen, Chaudhari, Langlotz (2024), RaVL — arXiv:2411.04097
 - Fay, Reguigui, Yang, Gatidis, Küstner (2025), MIMM-X — arXiv:2511.22990
