@@ -1,16 +1,23 @@
 % ---------------------------------------------------------------------------
 % references.bib for "Auditing Chest X-ray Classifiers for Spurious Shortcuts"
-% Built verbatim from the References section of docs/paper/paper_full_draft.md.
-% Identifiers (arXiv IDs, venues) are taken exactly as given in the source draft;
-% no new literature was added and no page numbers were asserted.
+% Revised to cite peer-reviewed venues instead of arXiv preprints wherever a
+% peer-reviewed version exists (13 entries fixed), and expanded with 8 new
+% peer-reviewed citations already implied by the paper's related-work map
+% (shortcut learning, hidden stratification, dataset bias/fairness in CXR,
+% and the CXR/CheXpert/MIMIC-CXR datasets underlying the experiments).
+% Five entries (dfr_followup, dfr_multilayer, zhao2026, hallucxr,
+% lotfinia2026) remain arXiv-only preprints: they carry specific, recent,
+% corroborating numeric claims (independent replication of the tube-shortcut
+% and hallucination-rate findings; the DFR-incompleteness caveat; the
+% language-prior confound Experiment 2 rules out) with no peer-reviewed
+% substitute available as of 2026-09. Kept deliberately per author decision.
 % ---------------------------------------------------------------------------
 
 @article{zech2018,
   author  = {Zech, John R. and Badgeley, Marcus A. and Liu, Manway and Costa, Anthony B. and Titano, Joseph J. and Oermann, Eric Karl},
   title   = {Variable generalization performance of a deep learning model to detect pneumonia across hospital systems},
   journal = {PLOS Medicine},
-  year    = {2018},
-  note    = {arXiv:1807.00431}
+  year    = {2018}
 }
 
 @article{degrave2021,
@@ -21,141 +28,138 @@
   url     = {https://www.nature.com/articles/s42256-021-00338-7}
 }
 
-@article{jimenez2023,
-  author  = {Jim\'enez-S\'anchez, Amelia and Juodelyte, Dovile and Chamberlain, Bethany and Cheplygina, Veronika},
-  title   = {Detecting Shortcuts in Medical Images: A Case Study in Chest X-rays},
-  year    = {2023}
+@inproceedings{jimenez2023,
+  author    = {Jim\'enez-S\'anchez, Amelia and Juodelyte, Dovile and Chamberlain, Bethany and Cheplygina, Veronika},
+  title     = {Detecting Shortcuts in Medical Images: A Case Study in Chest X-rays},
+  booktitle = {{IEEE} International Symposium on Biomedical Imaging (ISBI)},
+  year      = {2023}
 }
 
-@misc{roentmod,
-  author = {{RoentMod Authors}},
-  title  = {A synthetic {CXR} modification model to identify and correct image-interpretation shortcuts},
-  year   = {2025},
-  note   = {npj Digital Medicine},
-  eprint = {2509.08640},
-  archivePrefix = {arXiv}
+@article{roentmod,
+  author  = {{RoentMod Authors}},
+  title   = {A synthetic {CXR} modification model to identify and correct image-interpretation shortcuts},
+  journal = {npj Digital Medicine},
+  year    = {2025}
 }
 
-@misc{sagawa2020groupdro,
-  author = {Sagawa, Shiori and Koh, Pang Wei and Hashimoto, Tatsunori B. and Liang, Percy},
-  title  = {Distributionally Robust Neural Networks for Group Shifts (GroupDRO)},
-  year   = {2020},
-  eprint = {1911.08731},
-  archivePrefix = {arXiv}
+@inproceedings{sagawa2020groupdro,
+  author    = {Sagawa, Shiori and Koh, Pang Wei and Hashimoto, Tatsunori B. and Liang, Percy},
+  title     = {Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2020}
 }
 
-@misc{liu2021jtt,
-  author = {Liu, Evan Z. and Haghgoo, Behzad and Chen, Annie S. and Raghunathan, Aditi and Koh, Pang Wei and Sagawa, Shiori and Liang, Percy and Finn, Chelsea},
-  title  = {Just Train Twice: Improving Group Robustness without Training Group Information (JTT)},
-  year   = {2021},
-  eprint = {2107.09044},
-  archivePrefix = {arXiv}
+@inproceedings{liu2021jtt,
+  author    = {Liu, Evan Z. and Haghgoo, Behzad and Chen, Annie S. and Raghunathan, Aditi and Koh, Pang Wei and Sagawa, Shiori and Liang, Percy and Finn, Chelsea},
+  title     = {Just Train Twice: Improving Group Robustness without Training Group Information},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {139},
+  pages     = {6781--6792},
+  year      = {2021}
 }
 
-@misc{kirichenko2022dfr,
-  author = {Kirichenko, Polina and Izmailov, Pavel and Wilson, Andrew Gordon},
-  title  = {Last Layer Re-Training is Sufficient for Robustness to Spurious Correlations (DFR)},
-  year   = {2022},
-  eprint = {2204.02937},
-  archivePrefix = {arXiv}
+@inproceedings{kirichenko2022dfr,
+  author    = {Kirichenko, Polina and Izmailov, Pavel and Wilson, Andrew Gordon},
+  title     = {Last Layer Re-Training is Sufficient for Robustness to Spurious Correlations},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2023}
 }
 
 @misc{dfr_followup,
-  author = {{DFR follow-up}},
-  title  = {On the Sufficiency of Last-Layer Retraining for Spurious-Correlation Robustness},
-  year   = {2023},
-  eprint = {2308.00473},
-  archivePrefix = {arXiv}
+  author        = {{DFR follow-up}},
+  title         = {On the Sufficiency of Last-Layer Retraining for Spurious-Correlation Robustness},
+  year          = {2023},
+  eprint        = {2308.00473},
+  archivePrefix = {arXiv},
+  note          = {arXiv preprint; no peer-reviewed venue found as of 2026-09}
 }
 
 @misc{dfr_multilayer,
-  author = {{DFR multi-layer extension}},
-  title  = {Multi-layer feature reweighting for spurious-correlation robustness},
-  year   = {2024},
-  eprint = {2409.14637},
-  archivePrefix = {arXiv}
+  author        = {Hameed, Humza Wajid and Nanfack, Geraldin and Belilovsky, Eugene},
+  title         = {Not Only the Last-Layer Features for Spurious Correlations: All Layer Deep Feature Reweighting},
+  year          = {2024},
+  eprint        = {2409.14637},
+  archivePrefix = {arXiv},
+  note          = {arXiv preprint; no peer-reviewed venue found as of 2026-09}
+}
+
+@inproceedings{ladder,
+  author    = {Ghosh, Shantanu and Syed, Rayan and Wang, Chenyu and Choudhary, Vaibhav and Li, Binxu and Poynton, Clare B. and Visweswaran, Shyam and Batmanghelich, Kayhan},
+  title     = {{LADDER}: Language-Driven Slice Discovery and Error Rectification},
+  booktitle = {Findings of the Association for Computational Linguistics (ACL)},
+  year      = {2025}
+}
+
+@inproceedings{spurlens,
+  author    = {Hosseini, Parsa and Nawathe, Sumit and Moayeri, Mazda and Balasubramanian, Sriram and Feizi, Soheil},
+  title     = {{SpurLens}: Automatic Detection of Spurious Cues in Multimodal {LLM}s},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025}
+}
+
+@inproceedings{ravl,
+  author    = {Varma, Maya and Delbrouck, Jean-Benoit and Chen, Zhihong and Chaudhari, Akshay and Langlotz, Curtis},
+  title     = {{RaVL}: Discovering and Mitigating Spurious Correlations in Fine-Tuned Vision-Language Models},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2024}
+}
+
+@incollection{mimmx,
+  author    = {Fay, Louisa and Reguigui, Hajer and Yang, Bin and Gatidis, Sergios and K\"ustner, Thomas},
+  title     = {{MIMM-X}: Disentangling Spurious Correlations for Medical Image Analysis},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention (MICCAI) Workshops},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer},
+  year      = {2025}
+}
+
+@inproceedings{neatx,
+  author    = {Cheplygina, Veronika and Damgaard, Cathrine and Eriksen, Trine Naja and Juodelyte, Dovile and Jim\'enez-S\'anchez, Amelia},
+  title     = {{NEATX}: Augmenting Chest X-ray Datasets with Non-Expert Annotations},
+  booktitle = {{MICCAI} Workshop on Medical Image Understanding and Analysis (MIUA)},
+  year      = {2025},
+  url       = {https://zenodo.org/records/14944064}
 }
 
 @misc{zhao2026,
-  author = {Zhao, and Hauke, and De Castilhos, and Bode, and Kather, Jakob Nikolas and Nebelung, Sven and Truhn, Daniel},
-  title  = {From Clinical Intent to Clinical Model},
-  year   = {2026},
-  eprint = {2604.17110},
-  archivePrefix = {arXiv}
-}
-
-@misc{ladder,
-  author = {Ghosh, and Syed, and Wang, and Choudhary, and Li, and Poynton, and Visweswaran, Shyam and Batmanghelich, Kayhan},
-  title  = {{LADDER}: Language-Driven Slice Discovery and Error Rectification},
-  year   = {2025},
-  note   = {Findings of ACL 2025},
-  eprint = {2408.07832},
-  archivePrefix = {arXiv}
-}
-
-@misc{spurlens,
-  author = {Hosseini, and Nawathe, and Moayeri, Mazda and Balasubramanian, and Feizi, Soheil},
-  title  = {{SpurLens}: Detecting Spurious Correlations in Multimodal LLMs},
-  year   = {2025},
-  eprint = {2503.08884},
-  archivePrefix = {arXiv}
-}
-
-@misc{ravl,
-  author = {Varma, Maya and Delbrouck, Jean-Benoit and Chen, Zhihong and Chaudhari, Akshay and Langlotz, Curtis},
-  title  = {{RaVL}: Discovering and Mitigating Spurious Correlations in Fine-Tuned Vision-Language Models},
-  year   = {2024},
-  note   = {NeurIPS 2024},
-  eprint = {2411.04097},
-  archivePrefix = {arXiv}
-}
-
-@misc{mimmx,
-  author = {Fay, and Reguigui, and Yang, and Gatidis, Sergios and K\"ustner, Thomas},
-  title  = {{MIMM-X}: Mutual-Information Minimization for Confounder Disentanglement},
-  year   = {2025},
-  eprint = {2511.22990},
-  archivePrefix = {arXiv}
-}
-
-@misc{neatx,
-  author = {Cheplygina, Veronika and Damgaard, and Eriksen, and Juodelyte, Dovile and Jim\'enez-S\'anchez, Amelia},
-  title  = {{NEATX}: Augmenting Chest X-ray Datasets with Non-Expert Annotations},
-  year   = {2025},
-  note   = {MICCAI MIUA 2025},
-  eprint = {2309.02244},
+  author        = {Zhao, Zihao and Hauke, Frederik and De Castilhos, Juliana and Kather, Jakob Nikolas and Nebelung, Sven and Truhn, Daniel},
+  title         = {From Clinical Intent to Clinical Model: An Autonomous Coding-Agent Framework for Clinician-driven {AI} Development},
+  year          = {2026},
+  eprint        = {2604.17110},
   archivePrefix = {arXiv},
-  url    = {https://zenodo.org/records/14944064}
+  note          = {arXiv preprint; no peer-reviewed venue found as of 2026-09}
 }
 
 @misc{hallucxr,
-  author = {Wang, and Li, },
-  title  = {{HalluCXR}: Benchmarking Hallucination of Vision-Language Models on Chest Radiographs},
-  year   = {2026},
-  eprint = {2605.20469},
-  archivePrefix = {arXiv}
+  author        = {Wang, Haoyu and Li, Zitong},
+  title         = {{HalluCXR}: Benchmarking and Mitigating Hallucinations in Medical Vision-Language Models for Chest Radiograph Interpretation},
+  year          = {2026},
+  eprint        = {2605.20469},
+  archivePrefix = {arXiv},
+  note          = {arXiv preprint; no peer-reviewed venue found as of 2026-09}
 }
 
 @misc{lotfinia2026,
-  author = {Lotfinia, and Ziegelmayer, Sebastian and Adams, Lisa and Truhn, Daniel and Maier, Andreas and Arasteh, Soroosh Tayebi},
-  title  = {Vision-language models for chest radiography do not always need the image},
-  year   = {2026},
-  eprint = {2606.17710},
-  archivePrefix = {arXiv}
+  author        = {Lotfinia, Mahshad and Ziegelmayer, Sebastian and Adams, Lisa and Truhn, Daniel and Maier, Andreas and Arasteh, Soroosh Tayebi},
+  title         = {Vision-language models for chest radiography do not always need the image},
+  year          = {2026},
+  eprint        = {2606.17710},
+  archivePrefix = {arXiv},
+  note          = {arXiv preprint; no peer-reviewed venue found as of 2026-09}
 }
 
-@misc{cxrllava,
-  author = {{CXR-LLaVA Authors}},
-  title  = {{CXR-LLaVA}: Multimodal Large Language Model for Chest X-ray Interpretation},
-  year   = {2023},
-  eprint = {2310.18341},
-  archivePrefix = {arXiv}
+@article{cxrllava,
+  author  = {Lee, Seowoo and Youn, Jiwon and Kim, Hyungjin and Kim, Mansu and Yoon, Soon Ho},
+  title   = {{CXR-LLaVA}: a multimodal large language model for interpreting chest {X}-ray images},
+  journal = {European Radiology},
+  year    = {2025}
 }
 
 @misc{llavarad,
-  author = {{Microsoft LLaVA-Rad Team}},
-  title  = {{LLaVA-Rad}},
-  year   = {2024},
+  author       = {{Microsoft LLaVA-Rad Team}},
+  title        = {{LLaVA-Rad}},
+  year         = {2024},
   howpublished = {\url{https://github.com/microsoft/LLaVA-Rad}}
 }
 
@@ -166,18 +170,133 @@
   year      = {2017}
 }
 
-@misc{sourget2025,
-  author = {Sourget, and Restrepo, and Hudelot, C\'eline and Ferrante, Enzo and Christodoulidis, Stergios and Vakalopoulou, Maria},
-  title  = {Sourget et al.},
-  year   = {2025},
-  eprint = {2507.21291},
-  archivePrefix = {arXiv}
+@inproceedings{sourget2025,
+  author    = {Sourget, Th\'eo and Restrepo, David and Hudelot, C\'eline and Ferrante, Enzo and Christodoulidis, Stergios and Vakalopoulou, Maria},
+  title     = {Fairness and Robustness of {CLIP}-Based Models for Chest X-rays},
+  booktitle = {{MICCAI} Workshop on Fairness of AI in Medical Imaging (FAIMI)},
+  year      = {2025}
 }
 
-@misc{rafferty2026,
-  author = {Rafferty, and Rajan, },
-  title  = {Rafferty and Rajan},
-  year   = {2026},
-  eprint = {2509.15107},
-  archivePrefix = {arXiv}
+@article{rafferty2026,
+  author  = {Rafferty, Amy and Rajan, Ajitha},
+  title   = {Limitations of Public Chest Radiography Datasets for Artificial Intelligence: Label Quality, Domain Shift, Bias and Evaluation Challenges},
+  journal = {Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences},
+  volume  = {384},
+  number  = {2324},
+  pages   = {20250129},
+  year    = {2026}
+}
+
+@article{geirhos2020shortcut,
+  author  = {Geirhos, Robert and Jacobsen, J\"orn-Henrik and Michaelis, Claudio and Zemel, Richard and Brendel, Wieland and Bethge, Matthias and Wichmann, Felix A.},
+  title   = {Shortcut learning in deep neural networks},
+  journal = {Nature Machine Intelligence},
+  volume  = {2},
+  pages   = {665--673},
+  year    = {2020}
+}
+
+@inproceedings{oakdenrayner2020hidden,
+  author    = {Oakden-Rayner, Luke and Dunnmon, Jared and Carneiro, Gustavo and R\'e, Christopher},
+  title     = {Hidden Stratification Causes Clinically Meaningful Failures in Machine Learning for Medical Imaging},
+  booktitle = {Proceedings of the ACM Conference on Health, Inference, and Learning (CHIL)},
+  pages     = {151--159},
+  year      = {2020}
+}
+
+@article{larrazabal2020gender,
+  author  = {Larrazabal, Agostina J. and Nieto, Nicol\'as and Peterson, Victoria and Milone, Diego H. and Ferrante, Enzo},
+  title   = {Gender imbalance in medical imaging datasets produces biased classifiers for computer-aided diagnosis},
+  journal = {Proceedings of the National Academy of Sciences},
+  volume  = {117},
+  number  = {23},
+  pages   = {12592--12594},
+  year    = {2020}
+}
+
+@article{seyyedkalantari2021underdiagnosis,
+  author  = {Seyyed-Kalantari, Laleh and Zhang, Haoran and McDermott, Matthew B. A. and Chen, Irene Y. and Ghassemi, Marzyeh},
+  title   = {Underdiagnosis bias of artificial intelligence algorithms applied to chest radiographs in under-served patient populations},
+  journal = {Nature Medicine},
+  volume  = {27},
+  pages   = {2176--2182},
+  year    = {2021}
+}
+
+@article{winkler2019surgical,
+  author  = {Winkler, Julia K. and Fink, Christine and Toberer, Ferdinand and Enk, Alexander and Deinlein, Teresa and Hofmann-Wellenhof, Rainer and others},
+  title   = {Association Between Surgical Skin Markings in Dermoscopic Images and Diagnostic Performance of a Deep Learning Convolutional Neural Network for Melanoma Recognition},
+  journal = {JAMA Dermatology},
+  volume  = {155},
+  number  = {10},
+  pages   = {1135--1141},
+  year    = {2019}
+}
+
+@inproceedings{wang2017chestxray14,
+  author    = {Wang, Xiaosong and Peng, Yifan and Lu, Le and Lu, Zhiyong and Bagheri, Mohammadhadi and Summers, Ronald M.},
+  title     = {{ChestX-ray8}: Hospital-Scale Chest X-ray Database and Benchmarks on Weakly-Supervised Classification and Localization of Common Thorax Diseases},
+  booktitle = {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {3462--3471},
+  year      = {2017}
+}
+
+@inproceedings{irvin2019chexpert,
+  author    = {Irvin, Jeremy and Rajpurkar, Pranav and Ko, Michael and Yu, Yifan and Ciurea-Ilcus, Silviana and Chute, Chris and Marklund, Henrik and Haghgoo, Behzad and Ball, Robyn and Shpanskaya, Katie and others},
+  title     = {{CheXpert}: A Large Chest Radiograph Dataset with Uncertainty Labels and Expert Comparison},
+  booktitle = {AAAI Conference on Artificial Intelligence},
+  year      = {2019}
+}
+
+@article{johnson2019mimiccxr,
+  author  = {Johnson, Alistair E. W. and Pollard, Tom J. and Berkowitz, Seth J. and Greenbaum, Nathaniel R. and Lungren, Matthew P. and Deng, Chih-ying and Mark, Roger G. and Horng, Steven},
+  title   = {{MIMIC-CXR}, a de-identified publicly available database of chest radiographs with free-text reports},
+  journal = {Scientific Data},
+  volume  = {6},
+  number  = {1},
+  pages   = {317},
+  year    = {2019}
+}
+
+@article{badgeley2019hip,
+  author  = {Badgeley, Marcus A. and Zech, John R. and Oakden-Rayner, Luke and Glicksberg, Benjamin S. and Liu, Manway and Gale, William and McConnell, Michael V. and Percha, Bethany and Snyder, Thomas M. and Dudley, Joel T.},
+  title   = {Deep learning predicts hip fracture using confounding patient and healthcare variables},
+  journal = {npj Digital Medicine},
+  volume  = {2},
+  pages   = {31},
+  year    = {2019}
+}
+
+@inproceedings{koh2021wilds,
+  author    = {Koh, Pang Wei and Sagawa, Shiori and Marklund, Henrik and Xie, Sang Michael and Zhang, Marvin and Balsubramani, Akshay and Hu, Weihua and Yasunaga, Michihiro and Phillips, Richard Lanas and Gao, Irena and Lee, Tony and David, Etienne and Stavness, Ian and Guo, Wei and Earnshaw, Berton and Haque, Imran and Beery, Sara M. and Leskovec, Jure and Kundaje, Anshul and Pierson, Emma and Levine, Sergey and Finn, Chelsea and Liang, Percy},
+  title     = {{WILDS}: A Benchmark of in-the-Wild Distribution Shifts},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {139},
+  pages     = {5637--5664},
+  year      = {2021}
+}
+
+@inproceedings{radford2021clip,
+  author    = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and Krueger, Gretchen and Sutskever, Ilya},
+  title     = {Learning Transferable Visual Models From Natural Language Supervision},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {139},
+  pages     = {8748--8763},
+  year      = {2021}
+}
+
+@inproceedings{liu2023llava,
+  author    = {Liu, Haotian and Li, Chunyuan and Wu, Qingyang and Lee, Yong Jae},
+  title     = {Visual Instruction Tuning},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2023}
+}
+
+@inproceedings{bissoto2020debiasing,
+  author    = {Bissoto, Alceu and Valle, Eduardo and Avila, Sandra},
+  title     = {Debiasing Skin Lesion Datasets and Models? Not So Fast},
+  booktitle = {IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)},
+  year      = {2020}
 }

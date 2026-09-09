@@ -25,7 +25,7 @@ spikes were built, run, measured against a threshold, and recorded. Headline res
 | V3 | Grad-CAM localizes the confound? | **PASS** — 100% peak-in-box (control 0.5%) |
 | V4a | VLM names a synthetic confound? | **PASS** — P 0.98 / R 0.90 / halluc 0.02 |
 | V4b | VLM names a real device? | **FAIL** — halluc 0.50 → **pivot** |
-| V5 | Mitigation recovers accuracy? | **PASS** (real tube) — worst-group 0.67→0.83, ID preserved |
+| V5 | Mitigation recovers accuracy? | **PASS** (real tube) — worst-group 0.67→0.79 (3-seed mean), ID preserved |
 | V6 | Cross-site gap exists / is shortcut-driven? | Gap **exists** (0.192); shortcut-driven **not supported** (zero-shot null +0.005) |
 
 The V4b failure was replicated across two independent VLM families (Scout 55%, Pixtral 83%

@@ -1,0 +1,125 @@
+\relax 
+\citation{zech2018}
+\citation{degrave2021}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{}\protected@file@percent }
+\citation{zech2018}
+\citation{degrave2021}
+\citation{jimenez2023}
+\citation{roentmod}
+\citation{sagawa2020groupdro}
+\citation{liu2021jtt}
+\citation{kirichenko2022dfr}
+\citation{ladder}
+\citation{hallucxr}
+\citation{zech2018}
+\citation{degrave2021}
+\citation{jimenez2023}
+\citation{roentmod}
+\citation{sagawa2020groupdro}
+\citation{liu2021jtt}
+\citation{kirichenko2022dfr}
+\citation{dfr_followup}
+\citation{dfr_multilayer}
+\citation{zhao2026}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{}\protected@file@percent }
+\citation{ladder}
+\citation{spurlens}
+\citation{ravl}
+\citation{mimmx}
+\citation{gradcam}
+\citation{hallucxr}
+\citation{lotfinia2026}
+\citation{cxrllava}
+\citation{llavarad}
+\citation{neatx}
+\citation{sourget2025}
+\citation{rafferty2026}
+\citation{ladder}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Positioning}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {III}Methods}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Overview}{3}{}\protected@file@percent }
+\citation{neatx}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Positioning against the closest analogues. Two cells remain genuinely unresolved in our source documents and are flagged as visible TODO comments in the source, not invented.}}{4}{}\protected@file@percent }
+\newlabel{tab:positioning}{{1}{4}{}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Data and Model}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}V1 --- Pipeline Sanity}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}V2 --- Shortcut Induction}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}V3 --- Attribution Localizes the Confound}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-F}}V4 --- Blind VLM Naming}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The auditor's confound-agnostic detect$\rightarrow $\allowbreak  localize$\rightarrow $\allowbreak  name$\rightarrow $\allowbreak  mitigate loop. Attribution (Grad-CAM) and mitigation (DFR) operate on a generic confound description --- a region box, or a \texttt  {(confound, label)} column pair --- and run unmodified across the synthetic tag, the real chest tube, and the cross-site case. The naming stage is isolated behind a \texttt  {crops/ + manifest.json} $\rightarrow $ \texttt  {predictions.jsonl} file contract: it is the only component with an external, rate-limited dependency, and no method in the mitigation path imports it, so the mitigation result is naming-independent by construction, not merely by claim.}}{5}{}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{5}{}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-G}}V5 --- Mitigation}{5}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-H}}V6 --- Cross-Site Generalization}{5}{}\protected@file@percent }
+\citation{hallucxr}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-I}}Reproducibility}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Results}{6}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Multi-VLM replication on the identical V4b crops, prompt, and matcher. Both models fabricate a device on a majority of clean control crops.}}{6}{}\protected@file@percent }
+\newlabel{tab:multivlm}{{2}{6}{}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Naming Succeeds on the Synthetic Confound and Fails on the Real One}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}The Failure Is a Property of General VLMs, Not of One Model}{6}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The naming boundary: control-hallucination (device named on a confound-free crop) for each VLM on the synthetic confound versus the real chest tube. The boundary is {\fontencoding  {T1}\fontseries  {b}\selectfont  per-model}, not a flat clean split: Llama-4-Scout rises from {\fontencoding  {T1}\fontseries  {b}\selectfont  0.02} (synthetic) to {\fontencoding  {T1}\fontseries  {b}\selectfont  0.55} (real); Pixtral-12B rises from {\fontencoding  {T1}\fontseries  {b}\selectfont  0.31} (synthetic) to {\fontencoding  {T1}\fontseries  {b}\selectfont  0.83} (real). Both fabricate a device on a majority of clean control crops in the real-device setting; Pixtral already fabricates on nearly a third of clean synthetic-setting crops. The $<$10\% gate is cleared only by Scout on the synthetic confound.}}{7}{}\protected@file@percent }
+\newlabel{fig:naming_boundary}{{2}{7}{}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}What Survives the Naming Failure}{7}{}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Mitigation across 3 seeds (mean $\pm $ std). Worst-group and in-distribution (ID) accuracy and the reliance gap, for the real tube and the synthetic tag.}}{7}{}\protected@file@percent }
+\newlabel{tab:mitigation}{{3}{7}{}{table.3}{}}
+\citation{zech2018}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Mitigation comparison (Table~\ref {tab:mitigation}): worst-group and in-distribution accuracy for ERM, JTT, and DFR on the real tube confound and the synthetic tag confound, 3-seed mean $\pm $ std. On the tube, DFR and JTT both clear the ERM worst-group floor by roughly 12 points while preserving in-distribution accuracy; on the tag, the same procedures collapse in-distribution accuracy alongside the reliance gap, the cautionary result discussed in \S  \ref {sec:supporting}.}}{8}{}\protected@file@percent }
+\newlabel{fig:mitigationbar}{{3}{8}{}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Mechanism --- Why Naming Breaks}{8}{}\protected@file@percent }
+\newlabel{sec:mechanism}{{\mbox  {IV-D}}{8}{}{subsection.4.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Difficulty curve: sweeping synthetic-tag opacity. Reducing visibility produces a recall cliff while control-hallucination stays flat.}}{8}{}\protected@file@percent }
+\newlabel{tab:difficulty}{{4}{8}{}{table.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {IV-D}1}Experiment 1 --- the difficulty curve is a recall cliff, not a hallucination cliff}{8}{}\protected@file@percent }
+\citation{lotfinia2026}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Before/after Grad-CAM on the real tube model, produced by a single auditor command (detect$\rightarrow $\allowbreak  mitigate). After DFR last-layer retraining, attention broadens away from the confound-associated region while in-distribution accuracy is preserved (0.96$\rightarrow $0.97 on this single demo run) and worst-group accuracy rises.}}{9}{}\protected@file@percent }
+\newlabel{fig:before_after}{{4}{9}{}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {IV-D}2}Experiment 2 --- fabrication is grounded, not blind recitation}{9}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Cross-site AUC change from NIH to PadChest, with 95\% bootstrap CIs where reported. The baseline drop ($-0.192$) is real and Zech-magnitude. Supervised target adaptation ($+0.082$, no CI reported) uses PadChest labels and licenses no mitigation claim. The zero-shot, label-free source-DFR test ($+0.005$, 95\% CI [$-0.018$, $+0.028$]) is the honest test of whether the known source-side shortcut explains the gap: its interval includes zero and excludes a large recovery.}}{10}{}\protected@file@percent }
+\newlabel{fig:forest}{{5}{10}{}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Naming-difficulty (opacity) sweep for the synthetic tag (Table~\ref {tab:difficulty}). Reducing opacity produces a recall cliff for Scout ($0.90 \rightarrow 0.52 \rightarrow 0.03$) while control-hallucination stays flat ($\sim $0.02 Scout, $\sim $0.28--0.32 Pixtral) at every opacity level: faintness makes the model miss the confound, it does not make it invent one.}}{10}{}\protected@file@percent }
+\newlabel{fig:difficulty}{{6}{10}{}{figure.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Grounding experiment: verdict changes by direction, per dataset/condition/model, at $n = 100$.}}{10}{}\protected@file@percent }
+\newlabel{tab:grounding}{{5}{10}{}{table.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Representative synthetic-tag crops across the opacity levels swept in Table~\ref {tab:difficulty} (0.25--1.0), illustrating the visual difficulty gradient underlying the recall cliff in Figure~\ref {fig:difficulty}.}}{11}{}\protected@file@percent }
+\newlabel{fig:contactsheet}{{7}{11}{}{figure.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Specialist VLM}{11}{}\protected@file@percent }
+\newlabel{sec:specialist}{{\mbox  {IV-E}}{11}{}{subsection.4.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Image-independence (occlusion/swap) study (Table~\ref {tab:grounding}). pos$\rightarrow $neg (named at baseline, not after) is consistent with grounding; neg$\rightarrow $pos is fabrication merely relocated. Within V4b, occluding the tube region drops device-naming far more (61/100 Scout, 66/100 Pixtral) than occluding an equal-area irrelevant region (30/100 Scout, 13/100 Pixtral); the V4a \texttt  {relevant} condition is contaminated by the gray occluder itself tripping the \texttt  {names\_confound} matcher and should be read with that caveat.}}{12}{}\protected@file@percent }
+\newlabel{fig:occlusion}{{8}{12}{}{figure.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-F}}Supporting Evidence and Robustness}{13}{}\protected@file@percent }
+\newlabel{sec:supporting}{{\mbox  {IV-F}}{13}{}{subsection.4.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Discussion}{13}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Control-hallucination on confound-free crops across the full tested model roster, synthetic (V4a) vs.\ real chest tube (V4b), extending Figure~\ref {fig:naming_boundary} to the full roster. Llama-4-Scout and Pixtral-12B both fabricate on a majority of clean real-device crops; qwen2.5-vl-7b over-names just as hard (0.74) despite being a larger, newer general model. CheXagent-2-3B's 0.0 on V4b is a taxonomy gap --- its output vocabulary has no device class --- not a passed gate.}}{14}{}\protected@file@percent }
+\newlabel{fig:roster}{{9}{14}{}{figure.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Reliance gap vs.\ injected-tag correlation strength $p$ (one training seed per point). Reliance is negligible below $p \approx 0.7$ and climbs steeply above it, reaching the 44pp headline figure at $p=0.95$.}}{14}{}\protected@file@percent }
+\newlabel{fig:sweep}{{10}{14}{}{figure.10}{}}
+\citation{lotfinia2026}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Limitations}{15}{}\protected@file@percent }
+\newlabel{sec:limitations}{{VI}{15}{}{section.6}{}}
+\bibstyle{IEEEtran}
+\bibdata{references}
+\bibcite{zech2018}{1}
+\bibcite{degrave2021}{2}
+\bibcite{jimenez2023}{3}
+\bibcite{roentmod}{4}
+\bibcite{sagawa2020groupdro}{5}
+\bibcite{liu2021jtt}{6}
+\bibcite{kirichenko2022dfr}{7}
+\bibcite{ladder}{8}
+\bibcite{hallucxr}{9}
+\bibcite{dfr_followup}{10}
+\bibcite{dfr_multilayer}{11}
+\bibcite{zhao2026}{12}
+\bibcite{spurlens}{13}
+\bibcite{ravl}{14}
+\bibcite{mimmx}{15}
+\bibcite{gradcam}{16}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{16}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{REFERENCES}{16}{}\protected@file@percent }
+\bibcite{lotfinia2026}{17}
+\bibcite{cxrllava}{18}
+\bibcite{llavarad}{19}
+\bibcite{neatx}{20}
+\bibcite{sourget2025}{21}
+\bibcite{rafferty2026}{22}
+\gdef \@abspage@last{17}

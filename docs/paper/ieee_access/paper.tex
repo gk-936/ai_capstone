@@ -27,7 +27,7 @@
 \usepackage{array}
 
 % arrow shorthand used in a few tables/inline expressions
-\newcommand{\arw}{$\rightarrow$}
+\newcommand{\arw}{$\rightarrow$\allowbreak}
 
 \begin{document}
 
@@ -86,7 +86,7 @@ Auditing a classifier for this failure has four parts: (1) \textbf{detect} that 
 
 \textbf{Correcting shortcuts generatively.} RoentMod (arXiv:2509.08640) \cite{roentmod} pairs a medical image generator (RoentGen) with an image-to-image editor to produce counterfactual CXRs with specified findings while preserving anatomy, reporting discrimination improvements of 3--19\% AUC internally and 1--11\% externally, with 93\% of generated images rated realistic by readers. It is the closest correction-side prior art and the method we most directly contrast against: it relies on a generative diffusion pipeline and fine-tuning, where our naming step uses one free API pass over $\sim$200 crops with no generative model at all. That is a genuine trade rather than a strict improvement --- RoentMod's correction-only design never had to clear the bar our naming step failed.
 
-\textbf{Mitigation baselines.} GroupDRO (Sagawa et al., 2020) \cite{sagawa2020groupdro} optimizes worst-group loss but requires group labels; JTT (Liu et al., 2021) \cite{liu2021jtt} upweights an ERM model's errors to approximate group robustness without them; DFR (Kirichenko et al., 2022) \cite{kirichenko2022dfr} retrains only the last layer on group-balanced data, reaching 92.9\% worst-group on Waterbirds and 70.1\% on CivilComments at a fraction of GroupDRO's cost, on the premise that the backbone already encodes core features. Follow-up work (arXiv:2308.00473) \cite{dfr_followup} questions whether last-layer retraining always suffices --- a caution our synthetic-tag results directly corroborate, since on a \emph{pure}-shortcut backbone DFR's in-distribution recovery is incomplete. These methods assume the groups are already known; our loop attempts to discover and name the confound first.
+\textbf{Mitigation baselines.} GroupDRO (Sagawa et al., 2020) \cite{sagawa2020groupdro} optimizes worst-group loss but requires group labels; JTT (Liu et al., 2021) \cite{liu2021jtt} upweights an ERM model's errors to approximate group robustness without them; DFR (Kirichenko et al., 2022) \cite{kirichenko2022dfr} retrains only the last layer on group-balanced data, reaching 92.9\% worst-group on Waterbirds and 70.1\% on CivilComments at a fraction of GroupDRO's cost, on the premise that the backbone already encodes core features. Follow-up work (arXiv:2308.00473) \cite{dfr_followup} questions whether last-layer retraining always suffices --- a caution our synthetic-tag results directly corroborate, since on a \emph{pure}-shortcut backbone DFR's in-distribution recovery is incomplete. Hameed, Nanfack \& Belilovsky (arXiv:2409.14637) \cite{dfr_multilayer} respond to the same limitation by retraining on features pooled across all layers rather than only the last, reporting worst-group gains over standard DFR on Waterbirds-style benchmarks; we use standard last-layer DFR throughout, so an all-layer variant is a direct, cheap extension to try against our synthetic-tag collapse case (\S\ref{sec:supporting}) rather than a competing claim. These methods assume the groups are already known; our loop attempts to discover and name the confound first.
 
 \textbf{Concurrent work on the same shortcut.} Zhao et al.\ (arXiv:2604.17110) \cite{zhao2026} use an autonomous LLM coding-agent pipeline that, among other tasks, reduces chest-drain reliance for pneumothorax classification on NIH-derived data, reporting 60\%\arw{}31\% and 50\%\arw{}18\% reliance reduction on two datasets. Same target shortcut, different mechanism (agentic pipeline search vs.\ last-layer retraining), different metric (\% reliance vs.\ worst-group accuracy and reliance gap). It reports no VLM-naming step, no control-hallucination measurement, and no cross-site transfer test. We read it as independent, contemporaneous confirmation that this real shortcut is a live target reached by a different route --- corroborating, not competing.
 
@@ -94,7 +94,7 @@ Auditing a classifier for this failure has four parts: (1) \textbf{detect} that 
 
 \textbf{VLM reliability on chest radiographs} bears directly on our naming result. HalluCXR (arXiv:2605.20469) \cite{hallucxr} benchmarks 6 VLMs on 856 chest radiographs, finding 61.9--82.3\% overall and 36.4--80.2\% ``clinically dangerous'' hallucination rates, with severity highest on normal images (51.9\% severity-3 on normals). This corroborates our 0.50--0.83 control-hallucination on clean crops in a different model population on a different task (diagnostic findings vs.\ device naming). Lotfinia et al.\ (arXiv:2606.17710) \cite{lotfinia2026} show VLMs can answer CXR questions from language priors without attending to the image --- the direct threat to our naming step's interpretation, which our Experiment 2 addresses and does not support as an explanation of the failure (Section~\ref{sec:mechanism}). Specialist CXR-VLMs (CXR-LLaVA, arXiv:2310.18341 \cite{cxrllava}; LLaVA-Rad \cite{llavarad}) are fine-tuned on radiology data; we deliberately used a general-purpose, non-fine-tuned model to test the lower-barrier claim.
 
-\textbf{Ground-truth dependency.} NEATX (Cheplygina et al., arXiv:2309.02244) \cite{neatx} supplies the non-expert chest-drain annotations our real-confound experiments rely on. This is a data dependency, credited distinctly from prior art.
+\textbf{Ground-truth dependency.} NEATX (Cheplygina et al., arXiv:2309.02244) \cite{neatx} supplies the non-expert chest-drain annotations our real-confound experiments rely on. This is a data dependency, credited distinctly from prior art. Sourget et al.\ (arXiv:2507.21291) \cite{sourget2025} independently draw on NEATX alongside NIH-CXR14 and MIMIC-CXR to audit fairness and robustness of CLIP-based chest-X-ray models across demographic subgroups --- a companion use of the same annotation resource for a different auditing question (demographic fairness rather than device-confound naming) that corroborates NEATX's suitability as a shared ground-truth source. Rafferty \& Rajan (arXiv:2509.15107) \cite{rafferty2026} catalog label-quality, domain-shift, and bias limitations across the public chest-radiography datasets this paper itself depends on (NIH ChestX-ray14, PadChest); their findings on inter-dataset label-pipeline inconsistency are the general case of the specific label-generation-pipeline difference we flag as an unattributed candidate cause of the V6 cross-site gap (\S\ref{sec:limitations}).
 
 \subsection{Positioning}
 Table~\ref{tab:positioning} places this work against the closest analogues. The nearest prior art, LADDER \cite{ladder}, shares our premise --- name a classifier's shortcut with a foundation model, in radiology, without attribute labels --- but reads the image as text and evaluates discovery only through the downstream accuracy of the mitigation it enables. Our method reads the classifier's saliency region as pixels, through a blind-prompted general VLM, and evaluates the name directly against ground truth under a control-hallucination gate. That gate is what converts ``the VLM produced a plausible shortcut description'' into a testable claim, and it is why we can report --- rather than absorb into a mitigation score --- that blind naming \emph{fails} on a real device confound while succeeding on a synthetic one. What appears genuinely novel after an exhaustive July-2026 search: no paper (a) performs blind general-VLM naming of a CXR shortcut scored on precision/recall/control-hallucination, or (b) runs a zero-shot, label-free source-side intervention to test whether a known shortcut explains a cross-site gap, reporting the null honestly.
@@ -125,6 +125,13 @@ Table~\ref{tab:positioning} places this work against the closest analogues. The 
 We audit a chest X-ray classifier for reliance on spurious shortcuts through a four-stage loop: \textbf{detect} that the classifier's accuracy depends on a confound, \textbf{localize} the confound via attribution, \textbf{name} it in clinical language using a general-purpose vision-language model (VLM) that is never told what to look for, and \textbf{mitigate} the reliance by last-layer retraining. The loop is evaluated on a synthetic confound, a real device confound, and a real second site. The study was executed as six validation-gated spikes (V1--V6), each with a pre-registered pass/fail threshold and a stop-and-report point, so that a failed stage terminates a claim rather than being iterated around.
 
 Architecturally, this discipline produced a \textbf{confound-agnostic core}: the attribution (Grad-CAM) and mitigation (DFR) machinery take a generic confound description --- a region box, or a \texttt{(confound, label)} column pair --- so the same modules serve the synthetic tag, the real chest tube, and the cross-site case without modification. The one component with an external, rate-limited dependency --- the VLM-naming step --- is isolated behind a \texttt{crops/ + manifest.json} $\rightarrow$ \texttt{predictions.jsonl} file contract, so the provider is interchangeable and no downstream computation depends on it. No method in the mitigation path imports the naming module, enforcing by construction that the mitigation result cannot depend on the VLM.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig0_architecture.pdf}
+\caption{The auditor's confound-agnostic detect$\rightarrow$\allowbreak localize$\rightarrow$\allowbreak name$\rightarrow$\allowbreak mitigate loop. Attribution (Grad-CAM) and mitigation (DFR) operate on a generic confound description --- a region box, or a \texttt{(confound, label)} column pair --- and run unmodified across the synthetic tag, the real chest tube, and the cross-site case. The naming stage is isolated behind a \texttt{crops/ + manifest.json} $\rightarrow$ \texttt{predictions.jsonl} file contract: it is the only component with an external, rate-limited dependency, and no method in the mitigation path imports it, so the mitigation result is naming-independent by construction, not merely by claim.}
+\label{fig:architecture}
+\end{figure*}
 
 \subsection{Data and Model}
 The primary corpus is NIH ChestX-ray14 (112,120 images, resized to 224$\times$224), with patient-disjoint train/validation/test splits (73k/13k/25.6k) built from the official split lists; image-level splitting is never used, as it leaks a patient's other studies across splits. The target pathology is pneumothorax (roughly 3--5\% prevalence depending on split). The classifier is an ImageNet-pretrained DenseNet-121 trained with automatic mixed precision, batch size 16, and a \texttt{pos\_weight}-corrected binary cross-entropy loss for the class imbalance.
@@ -166,9 +173,13 @@ The V1 model is evaluated unchanged on PadChest. Two mitigation variants are dis
 PadChest images are 16-bit while NIH images are 8-bit. Reconciling this at load time (rather than by changing the model's evaluation transform) is required for validity; the NIH reference AUC is re-measured after every such change and serves as the control that validates any cross-site number.
 
 \subsection{Reproducibility}
+\begin{sloppypar}
 Every run is config-driven (typed YAML with inheritance and CLI overrides), fixed-seeded, and logged to a timestamped directory containing the resolved config, \texttt{metrics.json}, and a checkpoint. Dataset paths are configuration values; no image or checkpoint is version controlled. The codebase is organized into confound-agnostic modules (\texttt{data/}, \texttt{train/}, \texttt{shortcut/}, \texttt{attribution/}, \texttt{discovery/}, \texttt{evaluation/}, \texttt{mitigation/}, \texttt{report/}) with 128 passing tests concentrated on the parts most likely to silently break: patient-disjointness of the loaders, the naming scorer's matchers (tested \emph{not} to fire on generic anatomy), and the DFR group-balancing.
+\end{sloppypar}
 
 \textbf{Compute cost.} All local training/evaluation ran on a single consumer GPU (RTX 3050, 6GB); the core reported runs (V1/V2/V3 training and attribution, the 3-seed Phase-3 baseline table, V5, V6) total approximately 2 GPU-hours by \texttt{run.log} timestamp. The naming stage used 5,600 free-tier VLM API calls in total across the canonical V4a/V4b runs and every extension experiment (opacity sweep, occlusion study, multi-VLM and specialist arms); no generative model or fine-tuning step is used anywhere in the pipeline. This is the quantified basis for the compute-efficiency contrast drawn against RoentMod in Related Work --- we report our own cost directly rather than estimate RoentMod's, which is not published in comparable units.
+
+\textbf{API-model reproducibility.} All Llama-4-Scout results were obtained via the Groq API in July 2026; the provider has since deprecated this model from its hosted roster. Exact reproduction of the Scout numbers by re-querying the API is therefore no longer possible, a limitation inherent to evaluating third-party-hosted VLMs rather than locally-weighted checkpoints. The raw prediction manifests (\texttt{predictions*.jsonl}) archived alongside this submission are the artifact of record for these results, not a live, re-callable endpoint.
 
 % =====================================================================
 \section{Results}
@@ -232,14 +243,28 @@ tag & DFR & $0.609 \pm 0.022$ & $0.603 \pm 0.014$ & $-0.006 \pm 0.024$ \\
 
 \begin{figure*}[!t]
 \centering
+\includegraphics[width=0.85\textwidth]{figures/fig6_mitigation_comparison.pdf}
+\caption{Mitigation comparison (Table~\ref{tab:mitigation}): worst-group and in-distribution accuracy for ERM, JTT, and DFR on the real tube confound and the synthetic tag confound, 3-seed mean $\pm$ std. On the tube, DFR and JTT both clear the ERM worst-group floor by roughly 12 points while preserving in-distribution accuracy; on the tag, the same procedures collapse in-distribution accuracy alongside the reliance gap, the cautionary result discussed in \S\ref{sec:supporting}.}
+\label{fig:mitigationbar}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
 \includegraphics[width=0.9\textwidth]{figures/auditor_before_after_tube.png}
-\caption{Before/after Grad-CAM on the real tube model, produced by a single auditor command (detect$\rightarrow$mitigate). After DFR last-layer retraining, attention broadens away from the confound-associated region while in-distribution accuracy is preserved (0.96$\rightarrow$0.97 on this single demo run) and worst-group accuracy rises.}
+\caption{Before/after Grad-CAM on the real tube model, produced by a single auditor command (detect$\rightarrow$\allowbreak mitigate). After DFR last-layer retraining, attention broadens away from the confound-associated region while in-distribution accuracy is preserved (0.96$\rightarrow$0.97 on this single demo run) and worst-group accuracy rises.}
 \label{fig:before_after}
 \end{figure*}
 
 The synthetic tag tells the cautionary half of the story: the gap closes (0.44 $\rightarrow$ 0.02) but in-distribution accuracy falls 0.94 $\rightarrow$ 0.62. A linear probe run specifically to falsify the tempting ``the backbone is hollow'' reading measured probe AUC \textbf{0.690} --- above chance (0.50), below the clean baseline (0.845). Shortcut reliance \textbf{degrades but does not eliminate} core-feature learning, and the degradation is strength-dependent.
 
 Cross-site, a real gap exists and is not explained by the shortcut. NIH reference AUC \textbf{0.842} falls to PadChest \textbf{0.650}, a drop of \textbf{0.192} (95\% CI \textbf{[0.159, 0.225]}, stratified bootstrap, 2,000 resamples over the exact test images), matching the magnitude reported by Zech et al.\ \cite{zech2018} --- a robust effect, not a borderline one. Supervised target adaptation recovers \textbf{$+0.082$} --- but that is last-layer fitting on \emph{labeled} PadChest and would help absent any shortcut, so it licenses no mitigation claim. The honest test, zero-shot source-DFR with no target labels touched, returns \textbf{$+0.005$} (95\% CI \textbf{[$-0.018$, $+0.028$]}, same bootstrap procedure). The interval excludes a large recovery and includes zero, so the point estimate is not evidence of a real effect --- but the interval is also wide enough that it does not tightly rule out a small-to-moderate one (up to roughly $+0.03$ AUC): this is an \textbf{underpowered null}, not a \emph{tight} one, and we report it as such rather than as definitive proof that reducing a known real source-side shortcut cannot improve cross-site transfer. The 0.192 drop is distribution shift whose cause this design cannot identify; shortcuts are one unproven candidate among scanner, population, label-pipeline, residual-intensity, and subset-composition differences.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig5_crosssite_forest.pdf}
+\caption{Cross-site AUC change from NIH to PadChest, with 95\% bootstrap CIs where reported. The baseline drop ($-0.192$) is real and Zech-magnitude. Supervised target adaptation ($+0.082$, no CI reported) uses PadChest labels and licenses no mitigation claim. The zero-shot, label-free source-DFR test ($+0.005$, 95\% CI [$-0.018$, $+0.028$]) is the honest test of whether the known source-side shortcut explains the gap: its interval includes zero and excludes a large recovery.}
+\label{fig:forest}
+\end{figure*}
 
 \subsection{Mechanism --- Why Naming Breaks}
 \label{sec:mechanism}
@@ -272,12 +297,26 @@ Reducing visibility produces a \textbf{recall cliff} --- Scout's recall collapse
 
 This \textbf{rules out visibility as the bridge} from V4a's 0.02 hallucination to V4b's 0.50--0.83. Whatever separates the synthetic tag from the real tube, it is not how hard the confound is to see. The revised working hypothesis is that fabrication tracks the \textbf{anatomical plausibility of the confound category}: a synthetic tag is never mistakable for anatomy at any opacity --- it is either seen or not, with no ambiguous middle --- whereas a real device sits inside a space of plausible near-misses (other lines, catheters, vessels, fissures, rib edges) that a VLM's medical-image priors can generate confident boilerplate about.
 
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/exp1_difficulty_curve.png}
+\caption{Naming-difficulty (opacity) sweep for the synthetic tag (Table~\ref{tab:difficulty}). Reducing opacity produces a recall cliff for Scout ($0.90 \rightarrow 0.52 \rightarrow 0.03$) while control-hallucination stays flat ($\sim$0.02 Scout, $\sim$0.28--0.32 Pixtral) at every opacity level: faintness makes the model miss the confound, it does not make it invent one.}
+\label{fig:difficulty}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/exp1_contact_sheet.png}
+\caption{Representative synthetic-tag crops across the opacity levels swept in Table~\ref{tab:difficulty} (0.25--1.0), illustrating the visual difficulty gradient underlying the recall cliff in Figure~\ref{fig:difficulty}.}
+\label{fig:contactsheet}
+\end{figure*}
+
 \subsubsection{Experiment 2 --- fabrication is grounded, not blind recitation}
 The competing explanation is that the VLM is not reading the image at all --- a live concern, since Lotfinia et al.\ (arXiv:2606.17710) \cite{lotfinia2026} show VLMs can answer chest-radiograph questions from language priors without attending to the image. If V4b's descriptions were prior-emission independent of pixels, the auditor's naming step would be meaningless even where it scores well.
 
 We tested this with three per-crop conditions scored against each model's own unmodified-crop baseline description: occlude the \textbf{relevant} region, occlude an equal-area \textbf{irrelevant} region, or \textbf{swap} in a different same-kind crop. Verdict changes are broken down by direction, because a combined ``changed'' rate conflates opposite outcomes: \textbf{pos$\rightarrow$neg} (named at baseline, not named after) is consistent with grounding; \textbf{neg$\rightarrow$pos} (a \emph{new} device named after the edit) is fabrication merely relocated. All 12 cells are complete at $n = 100$ (Table~\ref{tab:grounding}).
 
-\begin{table}[!t]
+\begin{table*}[!t]
 \caption{Grounding experiment: verdict changes by direction, per dataset/condition/model, at $n = 100$.}
 \label{tab:grounding}
 \centering
@@ -300,7 +339,7 @@ v4b & swap       & scout   & 20 & 21 & 59 & 0.41 \\
 v4b & swap       & pixtral & 17 & 17 & 66 & 0.34 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 A measurement artifact requires that most of this table be read with care. The flat gray fill used to occlude the tag is \emph{itself} routinely described by the VLM as ``a gray rectangular object\ldots artificial and not part of the patient's anatomy\ldots a label or marker'' --- language that trips the exact \texttt{names\_confound} rule the tag was designed to trigger. Spot-checking confirms it: \textbf{76 of 100} Scout descriptions under V4a \emph{relevant} occlusion still flag positive, matching the \texttt{unchanged} count, and reading them shows the model is describing the \textbf{occlusion patch itself}, not residual tag content. Consequently \textbf{V4a's \texttt{relevant} numbers understate true grounding}, and the V4a-vs-V4b comparison is invalid for this question --- the measurement is biased toward \texttt{unchanged} for V4a in a way it is not for V4b.
 
@@ -311,6 +350,13 @@ A measurement artifact requires that most of this table be read with care. The f
 \end{itemize}
 
 Device-naming tracks the tube pixels. ``V4b fabrication is pure image-independent prior-emission'' is not supported. The reconciled mechanism, read against the 50--83\% control-hallucination on clean crops: the VLM carries a strong \textbf{device-present prior} \emph{and} grounds it on the salient region --- correctly reading a real tube when one is present, and \textbf{over-reading ambiguous normal anatomy as a device} when none is. This is prior-driven over-reading of an ambiguous salient region: neither blind recitation nor clean perception, and it coheres with Experiment 1's finding that plausibility, not visibility, is the operative axis. (Supporting but not load-bearing: V4b's swap condition is near-symmetric --- 20/21 Scout, 17/17 Pixtral --- and \texttt{text-identical-rate} was 0.0 in every cell, so verbatim recitation is not the failure mode. A texture-matched occluder should replace the flat gray fill in replication, to clean the V4a arm.)
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig4_occlusion_grounding.pdf}
+\caption{Image-independence (occlusion/swap) study (Table~\ref{tab:grounding}). pos$\rightarrow$neg (named at baseline, not after) is consistent with grounding; neg$\rightarrow$pos is fabrication merely relocated. Within V4b, occluding the tube region drops device-naming far more (61/100 Scout, 66/100 Pixtral) than occluding an equal-area irrelevant region (30/100 Scout, 13/100 Pixtral); the V4a \texttt{relevant} condition is contaminated by the gray occluder itself tripping the \texttt{names\_confound} matcher and should be read with that caveat.}
+\label{fig:occlusion}
+\end{figure*}
 
 \subsection{Specialist VLM}
 \label{sec:specialist}
@@ -326,7 +372,15 @@ The three reportable models --- qwen2.5-vl-7b, CheXagent-2-3B, and chexagent-8b 
 
 \textbf{One caution against an over-clean reading.} ``Specialist under-names, general over-names'' is the axis, but it is not the \emph{only} axis, and the general models are not uniformly safe wherever the specialist is silent. Even on the easy \textbf{synthetic} V4a controls, fabrication is model-dependent: Scout hallucinates on \textbf{0.02} of clean crops ([0.00, 0.05]) but Pixtral on \textbf{0.31} ([0.22, 0.40]) --- a per-model fabrication \emph{floor} that has nothing to do with domain specialization. The clean ``synthetic naming is safe'' story is Scout-specific; another general VLM fabricates on a third of the same easy controls. The auditor's reliability therefore turns on the specific model on both axes at once --- how much it over-names on clean crops \emph{and} whether its vocabulary can name the target at all --- and neither axis is settled by the general-vs-specialist label alone.
 
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig3_overname_underrname_roster.pdf}
+\caption{Control-hallucination on confound-free crops across the full tested model roster, synthetic (V4a) vs.\ real chest tube (V4b), extending Figure~\ref{fig:naming_boundary} to the full roster. Llama-4-Scout and Pixtral-12B both fabricate on a majority of clean real-device crops; qwen2.5-vl-7b over-names just as hard (0.74) despite being a larger, newer general model. CheXagent-2-3B's 0.0 on V4b is a taxonomy gap --- its output vocabulary has no device class --- not a passed gate.}
+\label{fig:roster}
+\end{figure*}
+
 \subsection{Supporting Evidence and Robustness}
+\label{sec:supporting}
 Five VLM-independent investigations probe the robustness of the results above. None is a headline; each either strengthens a claim by an independent route or bounds an alternative explanation.
 
 \textbf{The tube shortcut is severity-invariant (underpowered).} Stratifying the 94 overlapping pneumothorax-positive test images at the median bounding-box area and balancing groups within each tier, accuracy is perfect whenever a tube is present, at \emph{any} lesion size, and collapses when it is absent, at \emph{any} lesion size (low-severity gap 0.400 at $n$=20; high-severity gap 0.4375 at $n$=16). The gap is large in both tiers, which rules out a pure disease-burden proxy, but at $n$=16--20/group it is underpowered to distinguish true invariance from a real severity effect, so the invariance claim is withdrawn; what stands is that even low-severity cases show a large gap --- the shortcut is \textbf{device-keyed, not disease-burden-keyed}.
@@ -338,6 +392,13 @@ Five VLM-independent investigations probe the robustness of the results above. N
 \textbf{Label-free OOD attribution: the synthetic-vs-real asymmetry.} Generalizing the zero-shot source-DFR test to the synthetic tag, source-side tag mitigation does not merely fail to transfer --- it \emph{actively hurts} transfer ($-0.083$ on PadChest, vs the tube's $+0.005$ null). A \emph{pure} synthetic shortcut at $p$=0.95 is a near-total representation override; the tube model retains genuine disease signal alongside its shortcut while the tag model largely stops learning the disease. Synthetic confounds prove the \emph{method} but systematically overstate the \emph{severity} of the phenomenon relative to real ones, and should not be extrapolated to real shortcuts without the real-arm check.
 
 \textbf{Where reliance turns on: the correlation sweep.} Sweeping correlation strength \emph{p} at \textbf{one training seed per point} (a limitation carried through to the Limitations section), the reliance gap rises monotonically \textbf{across these five single-seed runs} --- 0.000 ($p$=.6) $\rightarrow$ 0.010 $\rightarrow$ 0.075 $\rightarrow$ 0.294 $\rightarrow$ 0.440 ($p$=.95) --- a trend, not yet a seed-replicated result at the training level, with an \textbf{onset threshold}: below $p \approx 0.7$ the correlation is too weak to exploit and the model learns real signal (test AUC $\approx$ 0.83). DFR's in-distribution cost is correspondingly strength-dependent, negligible where there is no shortcut and large where it was allowed to dominate. The DFR-recovery step was re-run at 3 seeds on the frozen per-\emph{p} checkpoints; every single-seed value falls within roughly one standard deviation of those means, so the sweep's conclusions do not hinge on the seed (the \emph{training}-seed variance of the gaps themselves is not claimed).
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/sweep_figure.png}
+\caption{Reliance gap vs.\ injected-tag correlation strength $p$ (one training seed per point). Reliance is negligible below $p \approx 0.7$ and climbs steeply above it, reaching the 44pp headline figure at $p=0.95$.}
+\label{fig:sweep}
+\end{figure*}
 
 \textbf{A fifth investigation, reported as blocked.} Severity-\textbf{aware} mitigation was not run: severity labels exist only for the 94-image test split, and no proxy was fabricated. It is reported as blocked rather than omitted.
 
@@ -355,6 +416,7 @@ Finally, honest scope. This is one pathology (pneumothorax), one primary corpus 
 
 % =====================================================================
 \section{Limitations}
+\label{sec:limitations}
 \textbf{Single pathology, single primary corpus.} Every result concerns pneumothorax on NIH ChestX-ray14 and its cross-site evaluation on PadChest. The mechanism proposed in Section~\ref{sec:mechanism} --- fabrication driven by the anatomical plausibility of the confound category --- predicts that other device-adjacent pathologies would behave similarly, but this is a prediction, not a measurement.
 
 \textbf{Non-expert ground truth for the real confound.} NEATX's chest-drain annotations come from two data-science students, not radiologists, with ``moderate to almost perfect'' agreement against expert labels reported in the source paper. This is adequate for inducing a training-time enrichment signal and defining a mitigation target, but it is a noisier ground truth than a radiologist-drawn segmentation --- and it bears most heavily on exactly the number the paper turns on: V4b's precision and recall are scored \emph{against these labels}. A radiologist-grade corpus (e.g.\ CANDID-PTX, whose access requires an ethics-training pathway we did not complete in time) would be the appropriate ground truth for re-scoring the naming gate specifically.
@@ -382,13 +444,9 @@ The contribution we stand behind is therefore not ``an auditor that names shortc
 
 % =====================================================================
 % References. Uses the IEEE Access BibTeX style shipped with the template.
-% These three appear in the source draft's References list but are not cited
-% inline in its body; \nocite keeps them in the compiled bibliography so the
-% reference list matches the source draft exactly.
-\nocite{dfr_multilayer,sourget2025,rafferty2026}
-
-\bibliographystyle{ieeeaccess}
+\bibliographystyle{IEEEtran}
 \bibliography{references}
+\EOD
 
 % -----------------------------------------------------------------
 % Author biography (IEEE Access requires one per author on acceptance).
