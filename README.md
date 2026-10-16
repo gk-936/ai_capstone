@@ -2,8 +2,7 @@
 
 An end-to-end auditor for deep chest X-ray classifiers that **detects**, **localizes**, **names**, and **mitigates** shortcut reliance — evaluated on a pneumothorax classifier across synthetic and real confounds, with a cross-site generalization test.
 
-> **Full writeup:** [`docs/capstone_writeup.md`](docs/capstone_writeup.md)  
-> **IEEE Access paper (LaTeX):** [`docs/paper/ieee_access/paper.tex`](docs/paper/ieee_access/paper.tex)
+> **Full writeup:** [`docs/capstone_writeup.md`](docs/capstone_writeup.md)
 
 ---
 
@@ -57,7 +56,7 @@ docs/
   capstone_writeup.md # Full project writeup (CO1–CO4 + Phase 5)
   writeup/            # CO1 related work, CO2 architecture, CO3 experiments, CO4 evaluation
   paper/
-    ieee_access/      # LaTeX paper (paper.tex + references.bib) + figures
+    figures/          # Publication-ready figures and generator script
 ```
 
 ---

@@ -1,13 +1,7 @@
 # Paper figures — index
 
-Canonical folder for every figure in the IEEE Access submission.
-The paper source is `docs/paper/ieee_access/paper.tex` (it includes them as
-`figures/<name>`); `docs/paper/ieee_access/figures/` holds the build copy used
-for the LaTeX compile (`compile.bat` in that folder, MiKTeX). The capstone
-writeup lives at `docs/capstone_writeup.md`. Keep the two figure folders in
-sync when you regenerate.
-
-All ten figures below are currently embedded in `paper.tex`.
+Canonical folder for project paper figures.
+The capstone writeup lives at `docs/capstone_writeup.md`.
 
 ## What each figure shows (and where its numbers come from)
 
@@ -32,10 +26,8 @@ All ten figures below are currently embedded in `paper.tex`.
 python docs/paper/figures/generate_new_figures.py
 ```
 matplotlib only (`Agg` backend) — no experiment re-run. Every number is hardcoded
-from already-published results in `docs/capstone_writeup.md` and
-`docs/paper/ieee_access/paper.tex`; the script's own header/source comments say
-exactly which section each number traces to. Outputs land in this same folder —
-copy them into `docs/paper/ieee_access/figures/` before recompiling.
+from already-published results in `docs/capstone_writeup.md`; the script's own header/source comments say
+exactly which section each number traces to. Outputs land in this same folder.
 
 **The other four** (`auditor_before_after_tube.png`, `exp1_difficulty_curve.png`,
 `exp1_contact_sheet.png`, `sweep_figure.png`) are **not** produced by that script —

@@ -33,12 +33,7 @@ run_review_demo.ps1
 docs/paper/draft_sections.md
 docs/paper/figures.zip
 docs/paper/paper_full_draft.md
-docs/paper/ieee_access/compile.bat
-docs/paper/ieee_access/overleaf_corruption_audit.md
-docs/paper/ieee_access/overleaf_corruption_audit.pdf
-docs/paper/ieee_access/paper.pdf
-docs/paper/ieee_access/paper_overleaf_syntaxfixed.tex
-docs/paper/ieee_access/paper_v0_rough_draft.tex
+docs/paper/ieee_access/
 
 # Local operational state (e.g. per-machine daily API-quota tracking) — not project artifacts
 /.cache/
