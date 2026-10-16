@@ -14,6 +14,24 @@ predictions.jsonl
 
 # Secrets
 .env
+.env.example
+
+# Internal / tool files — not for public sharing
+CLAUDE.md
+PROGRESS.md
+.claude/
+.superpowers/
+docs/superpowers/
+padchest_intensity_check.json
+run_review_demo.ps1
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+docs/paper/ieee_access/paper.pdf
+docs/paper/ieee_access/overleaf_corruption_audit.pdf
 
 # Local operational state (e.g. per-machine daily API-quota tracking) — not project artifacts
 /.cache/
