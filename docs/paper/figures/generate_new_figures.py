@@ -1,8 +1,7 @@
 """
-Generates the four data-driven figures and the architecture diagram that are
-new for the IEEE Access submission (Figures 3-6 / architecture Fig. 0), from
-numbers already reported and verified in docs/capstone_writeup.md and
-docs/paper/ieee_access/paper.tex. No new experiments are run here - this only
+Generates the four data-driven figures and the architecture diagram
+(Figures 3-6 / architecture Fig. 0) from numbers already reported and verified
+in docs/capstone_writeup.md. No new experiments are run here - this only
 visualizes existing, published results.
 
 Run: python docs/paper/figures/generate_new_figures.py
