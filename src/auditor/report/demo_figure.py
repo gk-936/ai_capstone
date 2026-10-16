@@ -46,7 +46,7 @@ def render_before_after(model_before, model_after, images: list[torch.Tensor],
         if titles is not None:
             axes[r, 0].set_ylabel(titles[r], fontsize=8)
 
-    fig.suptitle("Auditor: attention shifts off the confound after mitigation", fontsize=11)
+    fig.suptitle("Auditor attention shifts off the confound after mitigation", fontsize=11)
     fig.tight_layout()
     fig.savefig(out_path, dpi=120, bbox_inches="tight")
     plt.close(fig)

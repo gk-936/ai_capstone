@@ -92,7 +92,7 @@ def fig_overname_underrname():
     ax.text(x[2] - w/2, 0.015, "not\nreported", ha="center", va="bottom", fontsize=7, color="black")
 
     # annotate CheXagent's V4b=0.0 as a taxonomy gap, not a pass
-    ax.annotate("taxonomy gap:\nno device vocabulary\n(not a passed gate)",
+    ax.annotate("taxonomy gap,\nno device vocabulary\n(not a passed gate)",
                 xy=(x[chexagent_note_idx] + w/2, 0.0), xytext=(x[chexagent_note_idx] + w/2 + 0.15, 0.30),
                 fontsize=7.5, color=OI["black"], ha="left",
                 arrowprops=dict(arrowstyle="-", color=OI["gray"], lw=0.8))
@@ -114,10 +114,6 @@ def fig_overname_underrname():
     ax.set_ylim(0, 0.95)
     ax.set_title("Over-name / under-name across the full model roster", fontsize=11)
     ax.legend(loc="upper left", frameon=False, fontsize=8.5)
-    fig.text(0.5, -0.03,
-              "In plain terms: each bar is how often a model \"sees\" a device on an X-ray crop that has no device on it.\n"
-              "Bars above the dashed line make things up too often to trust; only Scout stays under the line on the harder, real-device test.",
-              ha="center", fontsize=7.5, color="black")
     fig.tight_layout()
     save(fig, "fig3_overname_underrname_roster")
 
@@ -148,7 +144,7 @@ def fig_occlusion_grounding():
         x = np.arange(len(sub))
         w = 0.35
         ax.bar(x - w/2, pos_neg, width=w, color=OI["blue"], edgecolor="white", linewidth=0.5,
-               label="pos→neg (grounded: named, then not)")
+               label="pos→neg (grounded, named then not)")
         ax.bar(x + w/2, neg_pos, width=w, color=OI["orange"], hatch="//", edgecolor="white", linewidth=0.5,
                label="neg→pos (fabrication relocated)")
         ax.set_xticks(x)
@@ -159,13 +155,6 @@ def fig_occlusion_grounding():
     handles, labels_ = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels_, loc="upper center", ncol=2, frameon=False, fontsize=8.5, bbox_to_anchor=(0.5, 1.06))
     fig.suptitle("")
-    fig.text(0.5, -0.05,
-              "In plain terms: we cover part of the crop and see if the model changes its mind. Covering the real spot\n"
-              "should flip a \"yes\" to a \"no\" (blue bars) far more than a random spot flips a \"no\" to a \"yes\" (orange bars) — that gap is\n"
-              "evidence the model is actually looking at the device, not just guessing. V4a relevant-occlusion is contaminated by the\n"
-              "gray occluder itself tripping the matcher (see §6.2 caveat); the grounding claim rests on the V4b-internal contrast\n"
-              "(relevant → far more pos→neg than irrelevant).",
-              ha="center", fontsize=7.5, color="black")
     fig.tight_layout()
     save(fig, "fig4_occlusion_grounding")
 
@@ -178,8 +167,8 @@ def fig_crosssite_forest():
     # effect, point estimate, ci_low, ci_high (None = no CI reported)
     rows = [
         ("NIH → PadChest AUC drop", -0.192, -0.225, -0.159, OI["vermillion"]),
-        ("Supervised target adaptation\n(uses PadChest labels — adaptation, not mitigation)", +0.082, None, None, OI["gray"]),
-        ("Zero-shot source-DFR\n(no target labels — the honest test)", +0.005, -0.018, +0.028, OI["blue"]),
+        ("Supervised target adaptation\n(uses PadChest labels, adaptation not mitigation)", +0.082, None, None, OI["gray"]),
+        ("Zero-shot source-DFR\n(no target labels, the honest test)", +0.005, -0.018, +0.028, OI["blue"]),
     ]
     fig, ax = plt.subplots(figsize=(7.2, 2.8))
     y = np.arange(len(rows))[::-1]
@@ -201,12 +190,6 @@ def fig_crosssite_forest():
     ax.set_xlim(-0.30, 0.15)
     ax.set_ylim(-0.7, len(rows) - 1 + 0.7)
     ax.set_title("Cross-site AUC change, with 95% bootstrap CIs where reported", fontsize=10.5, pad=14)
-    fig.text(0.5, -0.06,
-              "In plain terms: a classifier trained at one hospital loses about 19 points of AUC at a second hospital (top row).\n"
-              "Letting it see the new hospital's own labels recovers most of that (middle row, dashed diamond = single-run point\n"
-              "estimate, no CI available) — but that's cheating, since real deployments rarely have those labels. The bottom row is\n"
-              "the honest test: a label-free fix, and its recovery is close to zero, i.e. it does not meaningfully help.",
-              ha="center", fontsize=7.5, color="black")
     fig.tight_layout()
     save(fig, "fig5_crosssite_forest")
 
@@ -246,13 +229,7 @@ def fig_mitigation_comparison():
         ax.set_ylim(0.4, 1.05)
     axes[0].set_ylabel("Accuracy")
     axes[0].legend(loc="lower left", frameon=False, fontsize=8.5)
-    fig.suptitle("Mitigation: worst-group recovery vs. in-distribution cost (3-seed mean ± SD)", fontsize=10.5, y=1.03)
-    fig.text(0.5, -0.05,
-              "In plain terms: \"worst-group\" is accuracy on the hard cases where the shortcut is missing — the true test of\n"
-              "whether the model learned the disease rather than the tube/tag. JTT and DFR raise that bar over the plain baseline\n"
-              "(ERM) with only a small cost to everyday accuracy (right-hand bars). The effect is far larger for the synthetic tag,\n"
-              "because that shortcut was made deliberately strong and easy to unlearn; the real chest tube is a harder case.",
-              ha="center", fontsize=7.5, color="black")
+    fig.suptitle("Mitigation compares worst-group recovery against in-distribution cost (3-seed mean ± SD)", fontsize=10.5, y=1.03)
     fig.tight_layout()
     save(fig, "fig6_mitigation_comparison")
 
@@ -305,12 +282,8 @@ def fig_naming_boundary():
     ax.set_ylabel("Control-hallucination rate\n(devices named on confound-FREE crops)")
     ax.set_ylim(0, 1.0)
     ax.yaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
-    ax.set_title("The naming boundary: a VLM auditor fabricates devices on clean crops\nonly when the real confound is present", fontsize=11)
+    ax.set_title("The naming boundary is where a VLM auditor fabricates devices on clean crops\nonly when the real confound is present", fontsize=11)
     ax.legend(loc="upper left", frameon=False, fontsize=9)
-    fig.text(0.5, -0.02,
-              "Bars = control-hallucination rate on tube/tag-FREE crops (n=100/cell). Whiskers = 95% bootstrap CI (10k resamples, seed 1337).\n"
-              "Source: docs/writeup/statistical_hardening.md. Synthetic controls stay near 2% (Scout); real-tube controls jump to 55--83%.",
-              ha="center", fontsize=7.5, color="black")
     fig.tight_layout()
     save(fig, "figure1_naming_boundary")
 
@@ -351,19 +324,10 @@ def fig_architecture():
                              boxstyle="round,pad=0.02", linewidth=1.1, edgecolor="black",
                              facecolor="none", linestyle="--")
     ax.add_patch(dashed)
-    ax.text(naming_x, y0 - 0.55, "crops/ + manifest.json → predictions.jsonl\n(isolated: no mitigation code imports this)",
+    ax.text(naming_x, y0 - 0.55, "crops/ + manifest.json → predictions.jsonl\n(isolated, no mitigation code imports this)",
             ha="center", va="top", fontsize=7, color="black")
 
-    ax.text(5.1, 3.55, "Confound-agnostic core (region box, or (confound, label) pair) — serves synthetic tag, real tube, and cross-site from one implementation",
-            ha="center", fontsize=8, color=OI["black"], style="italic")
-    ax.plot([1.2, 8.9], [3.35, 3.35], color=OI["gray"], linewidth=0.8, linestyle=":")
-
-    ax.set_title("Auditor loop: detect → localize → name → mitigate", fontsize=11.5, pad=4)
-    ax.text(5.1, 0.35,
-            "In plain terms: the classifier's decision is checked for a hidden shortcut, the image region driving that\n"
-            "shortcut is located, a vision-language model is asked to name what it sees there with no hint of what to look for,\n"
-            "and only then is the model retrained to stop relying on it.",
-            ha="center", va="top", fontsize=7.5, color="black")
+    ax.set_title("Auditor loop, detect → localize → name → mitigate", fontsize=11.5, pad=4)
     fig.tight_layout()
     save(fig, "fig0_architecture")
 

@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 _MODEL_COLOR = {"scout": "#2980b9", "pixtral": "#c0392b"}
+_MODEL_DISPLAY = {"scout": "Scout", "pixtral": "Pixtral"}
 
 
 def plot(results_path: str | Path, out_path: str | Path | None = None) -> str:
@@ -32,19 +33,19 @@ def plot(results_path: str | Path, out_path: str | Path | None = None) -> str:
         color = _MODEL_COLOR[model]
         pts = sorted((r for r in rows if r["model"] == model), key=lambda r: r["opacity"])
         op = [r["opacity"] for r in pts]
-        ax1.plot(op, [r["precision"] for r in pts], "o-", color=color, label=f"{model} precision")
-        ax1.plot(op, [r["recall"] for r in pts], "s--", color=color, label=f"{model} recall")
-        ax2.plot(op, [r["control_hallucination"] for r in pts], "o-", color=color, label=model)
+        ax1.plot(op, [r["precision"] for r in pts], "o-", color=color, label=f"{_MODEL_DISPLAY[model]} precision")
+        ax1.plot(op, [r["recall"] for r in pts], "s--", color=color, label=f"{_MODEL_DISPLAY[model]} recall")
+        ax2.plot(op, [r["control_hallucination"] for r in pts], "o-", color=color, label=_MODEL_DISPLAY[model])
 
-    ax1.set_xlabel("tag opacity")
-    ax1.set_ylabel("score")
+    ax1.set_xlabel("Tag opacity")
+    ax1.set_ylabel("Score")
     ax1.set_ylim(-0.05, 1.05)
     ax1.set_title("Precision / recall vs confound salience")
     ax1.legend(fontsize=7)
     ax1.grid(alpha=0.3)
 
-    ax2.set_xlabel("tag opacity")
-    ax2.set_ylabel("control-hallucination rate")
+    ax2.set_xlabel("Tag opacity")
+    ax2.set_ylabel("Control-hallucination rate")
     ax2.set_ylim(-0.05, 1.05)
     ax2.axhline(0.10, color="gray", lw=0.8, ls=":", label="V4a/V4b gate (<0.10)")
     ax2.set_title("Fabrication-on-clean-controls vs confound salience")

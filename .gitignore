@@ -3,6 +3,8 @@
 # NOT the source package src/auditor/data/.
 /data/
 /experiments/
+/out/
+/demo_images/
 *.pth
 *.pt
 *.ckpt
