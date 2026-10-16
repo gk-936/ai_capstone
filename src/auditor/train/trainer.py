@@ -53,7 +53,6 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
     device = resolve_device(cfg.device)
     logger.info(f"device={device} amp={cfg.train.amp} backbone={cfg.train.backbone}")
 
-    # --- data ---
     index = build_index(
         cfg.data, target=cfg.train.target_pathology, seed=cfg.seed, max_per_split=max_per_split
     )
@@ -88,7 +87,6 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
     val_loader = DataLoader(val_ds, batch_size=cfg.train.batch_size, num_workers=nw, pin_memory=True)
     test_loader = DataLoader(test_ds, batch_size=cfg.train.batch_size, num_workers=nw, pin_memory=True)
 
-    # --- model / loss / opt ---
     model = _build_model(cfg.train.backbone).to(device)
     n_pos = max(index.n_pos["train"], 1)
     n_neg = len(index.subset("train")) - n_pos
@@ -128,7 +126,6 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
             best_val_auc = max(best_val_auc, val_auc)
             torch.save(model.state_dict(), best_ckpt)
 
-    # Reload the selected checkpoint for final evaluation.
     model.load_state_dict(torch.load(best_ckpt, map_location=device))
     test_auc = evaluate(model, test_loader, device)
 
@@ -141,7 +138,6 @@ def train_v1(cfg: Config, logger: RunLogger, max_per_split: dict | None = None) 
         "n_test": len(index.subset("test")),
     }
 
-    # V2: measure the reliance gap on a balanced test subset (aligned / removed / flipped).
     if cfg.shortcut.enabled:
         from auditor.evaluation.reliance import reliance_gap
 

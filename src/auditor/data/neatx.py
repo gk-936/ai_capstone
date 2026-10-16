@@ -91,7 +91,6 @@ def build_tube_index(
     df["split"] = split
     df = df[df["split"] != "unused"].reset_index(drop=True)
 
-    # --- Tube-enrich the TRAIN positives to induce the shortcut ---
     df = _enrich_train(df, train_enrich, seed, max_neg_per_split)
 
     n = {s: _split_counts(df, s) for s in ("train", "val", "test")}

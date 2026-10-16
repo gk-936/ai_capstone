@@ -44,15 +44,12 @@ def run_auditor(cfg: Config, logger: RunLogger, confound: str, checkpoint: str,
     build = _features_and_groups_tube if confound == "tube" else _features_and_groups_tag
     do_eval = _eval_tube if confound == "tube" else _eval_tag
 
-    # Original (shortcut-reliant) model.
     model_before = _load(cfg, checkpoint, device)
     feats, labels, index = build(model_before, cfg, device, cfg.seed)
 
-    # DETECT + (pre-mitigation) LOCALIZE baseline.
     before = do_eval(model_before, index, cfg, device)
     logger.info(f"detect (before): {before}")
 
-    # MITIGATE: DFR on a copy so we keep the original for the before/after figure.
     model_after = copy.deepcopy(model_before)
     weight, bias = fit_dfr_head(feats, labels, seed=cfg.seed)
     apply_dfr(model_after, weight, bias)
@@ -71,7 +68,6 @@ def run_auditor(cfg: Config, logger: RunLogger, confound: str, checkpoint: str,
         },
     }
 
-    # NAME (optional).
     if predictions and manifest:
         report["name"] = _naming_metrics(manifest, predictions, confound)
         logger.info(f"name: {report['name']}")
@@ -79,7 +75,6 @@ def run_auditor(cfg: Config, logger: RunLogger, confound: str, checkpoint: str,
         report["name"] = None
         logger.info("name: skipped (no predictions supplied) — loop runs naming-off")
 
-    # DEMO FIGURE: before vs after saliency on confound-positive images.
     images = collect_positive_images(index, confound, cfg, n_demo, cfg.seed)
     fig_path = render_before_after(
         model_before, model_after, images, cfg.attribution.target_layer,
@@ -87,7 +82,6 @@ def run_auditor(cfg: Config, logger: RunLogger, confound: str, checkpoint: str,
     report["demo_figure"] = fig_path
     logger.info(f"demo figure: {fig_path}")
 
-    # Write report (json + markdown).
     with open(logger.run_dir / "audit_report.json", "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
     (logger.run_dir / "audit_report.md").write_text(_markdown(report), encoding="utf-8")

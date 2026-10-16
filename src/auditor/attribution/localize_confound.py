@@ -72,7 +72,6 @@ def run_v3(cfg: Config, logger: RunLogger) -> dict:
 
     model = _build_model(cfg.train.backbone, a.checkpoint, device)
 
-    # Sample tagged positive test images. balanced subset then keep positives, cap to n_images.
     index = build_index(cfg.data, target=cfg.train.target_pathology, seed=cfg.seed)
     balanced = balanced_eval_subset(index, "test", seed=cfg.seed, per_class=a.n_images)
     pos_rows = balanced[balanced["label"] == 1].head(a.n_images).reset_index(drop=True)

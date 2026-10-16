@@ -45,14 +45,11 @@ class RunLogger:
         self.artifacts_dir = self.run_dir / "artifacts"
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-        # Resolved config snapshot
         with open(self.run_dir / "config.yaml", "w", encoding="utf-8") as f:
             yaml.safe_dump(config.model_dump(), f, sort_keys=False)
 
-        # Exact code provenance
         (self.run_dir / "git.txt").write_text(_git_state(), encoding="utf-8")
 
-        # Console + file logging
         self.logger = logging.getLogger(f"auditor.{spike}.{stamp}")
         self.logger.setLevel(logging.INFO)
         self.logger.handlers.clear()

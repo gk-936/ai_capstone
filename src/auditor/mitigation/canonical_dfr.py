@@ -26,10 +26,8 @@ from auditor.mitigation.run_v5 import (
 def tune_dfr_c(feats_bal: np.ndarray, labels_bal: np.ndarray, seed: int) -> float:
     from sklearn.model_selection import StratifiedKFold
     from sklearn.linear_model import LogisticRegression
-    # Standard grid for C
     c_grid = [10**i for i in range(-4, 3)]
     
-    # Standardize features
     mu = feats_bal.mean(axis=0)
     sigma = feats_bal.std(axis=0) + 1e-6
     z = (feats_bal - mu) / sigma
@@ -70,13 +68,11 @@ def extract_full_val_tag(model, cfg, device, seed):
     val = index.subset("val").copy()
     sub = SplitIndex(df=val.assign(split="val"), target="Pneumothorax", n_pos={})
     
-    # 1. Untagged feats
     ds_untagged = make_dataset(sub, "val", cfg.data, train=False)
     # Using 0 workers for Windows
     loader_untagged = DataLoader(ds_untagged, batch_size=cfg.train.batch_size, num_workers=0, pin_memory=True)
     feats_untagged, labels_untagged = extract_features(model, loader_untagged, device)
     
-    # 2. Tagged feats
     base_ds = make_dataset(sub, "val", cfg.data, train=False)
     flags = [1] * len(base_ds)
     ds_tagged = _TagFlagged(base_ds, flags, cfg.shortcut.corner, cfg.shortcut.size)
@@ -116,10 +112,8 @@ def run_canonical_dfr(cfg: Config, logger: RunLogger, confound: str, checkpoint:
     device = resolve_device(cfg.device)
     logger.info(f"Canonical DFR rerun for {confound} checkpoint={checkpoint} device={device}")
     
-    # 1. Load baseline model
     model = _load(cfg, checkpoint, device)
     
-    # 2. Extract entire val set
     logger.info("Extracting features over full validation set...")
     if confound == "tube":
         val_feats, val_labels, val_confounds, index = extract_full_val_tube(model, cfg, device, cfg.seed)
@@ -132,11 +126,9 @@ def run_canonical_dfr(cfg: Config, logger: RunLogger, confound: str, checkpoint:
         
     logger.info(f"Full Val Features shape: {val_feats.shape}, labels: {val_labels.shape}, positive/negative count: {val_labels.sum()}")
     
-    # Evaluate BEFORE DFR
     before = do_eval(model, index, cfg, device)
     logger.info(f"BEFORE DFR: {before}")
     
-    # 3. Fit standard DFR (untuned C=1.0, 1 draw) for a direct control comparison
     logger.info("Fitting standard DFR (untuned C=1.0, 1 draw)...")
     feats_1, labels_1 = draw_balanced_features(val_feats, val_labels, val_confounds, per_group, cfg.seed)
     w_std, b_std = fit_dfr_head(feats_1, labels_1, C=1.0, seed=cfg.seed)
@@ -146,12 +138,10 @@ def run_canonical_dfr(cfg: Config, logger: RunLogger, confound: str, checkpoint:
     std_res = do_eval(model_std, index, cfg, device)
     logger.info(f"Standard DFR result: {std_res}")
     
-    # 4. Tune C on the first balanced draw
     logger.info("Tuning C parameter on first balanced draw via Stratified 5-Fold CV...")
     best_c = tune_dfr_c(feats_1, labels_1, cfg.seed)
     logger.info(f"Best C selected: {best_c}")
     
-    # 5. Fit logistic regression on 10 balanced draws and average weight/bias
     logger.info("Fitting and averaging over 10 balanced draws...")
     weights, biases = [], []
     for d in range(10):
@@ -164,7 +154,6 @@ def run_canonical_dfr(cfg: Config, logger: RunLogger, confound: str, checkpoint:
     avg_w = np.mean(weights, axis=0)
     avg_b = float(np.mean(biases))
     
-    # Apply canonical DFR
     model_can = copy.deepcopy(model)
     apply_dfr(model_can, avg_w, avg_b)
     can_res = do_eval(model_can, index, cfg, device)
@@ -186,7 +175,6 @@ def run_canonical_dfr(cfg: Config, logger: RunLogger, confound: str, checkpoint:
     
     (logger.run_dir / "canonical_dfr.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     
-    # Write comparison markdown report
     comparison_report = f"""# Investigation 2 — Canonical DFR Refit
 
 * **Confound:** {confound}

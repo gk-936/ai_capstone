@@ -97,7 +97,6 @@ def run_sweep(cfg: Config, logger: RunLogger, p_values: list[float]) -> dict:
             gap_trained = train_metrics.get("gap", float("nan"))
             logger.info(f"p={p}: trained reliance gap={gap_trained}")
 
-        # DFR recovery on that checkpoint.
         rec = _dfr_recovery_for_checkpoint(pcfg, checkpoint, device)
         row = {"p": p, "gap_trained": gap_trained, "checkpoint": checkpoint, **rec}
         rows.append(row)

@@ -45,33 +45,26 @@ def run_severity_analysis(cfg: Config, logger: RunLogger, checkpoint: str) -> di
     model.load_state_dict(torch.load(resolve_path(checkpoint), map_location=device))
     model = model.to(device).eval()
 
-    # Load tube index
     idx = build_tube_index(cfg.data, train_enrich=cfg.tube_train_enrich, seed=cfg.seed)
     test = idx.subset("test")
     pos = test[test["label"] == 1]
     
-    # Load NIH bboxes
     bbox_path = resolve_path(cfg.data.bbox_csv or "data/BBox_List_2017_Official_NIH.csv")
     bbox = pd.read_csv(bbox_path)
     bbox_ptx = bbox[bbox["Finding Label"] == "Pneumothorax"]
 
-    # Compute box area
     bbox_ptx = bbox_ptx.copy()
     bbox_ptx["area"] = bbox_ptx["w"] * bbox_ptx["h]"]
 
-    # Merge
     overlap = pos.merge(bbox_ptx, left_on="image", right_on="Image Index")
     logger.info(f"Overlapping Pneumothorax positive test images with BBoxes: {len(overlap)}")
     
-    # Median split on area
     median_val = overlap["area"].median()
     logger.info(f"Median bbox area: {median_val:.4f}")
 
-    # Stratify
     low_sev = overlap[overlap["area"] < median_val]
     high_sev = overlap[overlap["area"] >= median_val]
 
-    # For each bucket, compute accuracy with-tube vs without-tube
     def run_stratified(df_bucket, prefix: str):
         w_tube = df_bucket[df_bucket["tube"] == 1]
         w_out_tube = df_bucket[df_bucket["tube"] == 0]
@@ -113,7 +106,6 @@ def run_severity_analysis(cfg: Config, logger: RunLogger, checkpoint: str) -> di
     
     (logger.run_dir / "severity_analysis.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     
-    # Save a markdown report under the experiments directory
     report_content = f"""# Investigation 1 — Severity-stratified tube reliance
 
 * **Model Checkpoint:** `{checkpoint}`

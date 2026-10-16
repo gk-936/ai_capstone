@@ -18,7 +18,6 @@ import requests
 
 GROQ_BASE = "https://api.groq.com/openai/v1"
 
-# Never names tag/box/corner/marker — the naming must be blind (CLAUDE.md).
 BLIND_PROMPT = (
     "This is a small region that a diagnostic model focused on within a chest X-ray. "
     "Describe anything artificial, non-anatomical, or out of place that you see in this region. "
@@ -176,14 +175,14 @@ def name_all(crops_dir: str | Path, manifest_path: str | Path, out_path: str | P
         print(f"resuming: {len(done)} predictions already present, skipping those")
 
     n = len(done)
-    with open(out_path, "a", encoding="utf-8") as f:   # append so existing rows are kept
+    with open(out_path, "a", encoding="utf-8") as f:
         for i, row in enumerate(manifest):
             cid = row["id"]
             if cid in done:
                 continue
             desc = describe_crop(crops_dir / f"{cid}.png", model, keys=keys)
             f.write(json.dumps({"id": cid, "description": desc}) + "\n")
-            f.flush()                                   # persist each row immediately
+            f.flush()
             n += 1
             if i % 20 == 0:
                 print(f"{i}/{len(manifest)}  {cid}: {desc[:70]}")

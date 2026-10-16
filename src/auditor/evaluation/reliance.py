@@ -73,7 +73,6 @@ def reliance_gap(
     """Train-time confound present at test → measure accuracy aligned/removed/flipped."""
     rows = balanced_eval_subset(index, "test", seed=shortcut_cfg["seed"], per_class=per_class)
 
-    # A NIHDataset over exactly these balanced rows; TaggedDataset re-tags per mode.
     sub_index = SplitIndex(df=rows.assign(split="eval"), target=index.target, n_pos={})
     base_eval = make_dataset(sub_index, "eval", data_cfg, train=False)
 

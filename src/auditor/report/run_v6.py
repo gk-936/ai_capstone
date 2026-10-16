@@ -66,7 +66,6 @@ def run_v6_source_dfr_zeroshot(cfg: Config, logger: RunLogger, checkpoint: str,
     model.load_state_dict(torch.load(resolve_path(checkpoint), map_location=device))
     model = model.to(device).eval()
 
-    # PadChest test set (labels only used for AUC scoring, never for fitting).
     pc_index = build_padchest_index(cfg.data, labels_csv, seed=cfg.seed, dfr_frac=0.0,
                                     max_rows=cfg.data_padchest_max_rows or None)
     pc_test = _padchest_loader(pc_index, "test", images_dir, cfg.data.image_size, cfg.train.batch_size)
@@ -107,12 +106,10 @@ def run_v6(cfg: Config, logger: RunLogger, checkpoint: str, labels_csv: str,
     device = resolve_device(cfg.device)
     logger.info(f"V6 cross-site: checkpoint={checkpoint} site2={images_dir} device={device}")
 
-    # Load the NIH-trained (V1 clean) model.
     model = _build_model(cfg.train.backbone)
     model.load_state_dict(torch.load(resolve_path(checkpoint), map_location=device))
     model = model.to(device).eval()
 
-    # PadChest index (patient-disjoint dfr/test).
     index = build_padchest_index(cfg.data, labels_csv, seed=cfg.seed,
                                  dfr_frac=0.3, max_rows=cfg.data_padchest_max_rows or None)
     assert_patient_disjoint(index)
@@ -127,11 +124,9 @@ def run_v6(cfg: Config, logger: RunLogger, checkpoint: str, labels_csv: str,
 
     test_loader = _padchest_loader(index, "test", images_dir, cfg.data.image_size, bs)
 
-    # OOD AUC (before adaptation).
     padchest_auc_before = evaluate(model, test_loader, device)
     logger.info(f"PadChest test AUC (OOD, before): {padchest_auc_before:.4f}")
 
-    # DFR adaptation on a small PadChest subset (frozen backbone).
     dfr_loader = _padchest_loader(index, "dfr", images_dir, cfg.data.image_size, bs)
     feats, labels = extract_features(model, dfr_loader, device)
     padchest_auc_after = padchest_auc_before

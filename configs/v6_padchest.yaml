@@ -1,5 +1,6 @@
 # V6 — cross-site OOD: NIH-trained V1 model -> PadChest (Spain). Measure OOD AUC drop + DFR adapt.
 # Fill site2_images + padchest_labels_csv once the 12.89GB PadChest 224px set is downloaded.
+# Source: http://bimcv.cipf.es/bimcv-projects/padchest/ (224x224 release tar).
 extends: base.yaml
 
 spike: v6_padchest

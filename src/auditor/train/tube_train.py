@@ -72,7 +72,6 @@ def train_v4b(cfg: Config, logger: RunLogger, train_enrich: float = 0.9) -> dict
                     f"val_auc={val_auc:.4f} ({time.time()-t0:.0f}s)")
         torch.save(model.state_dict(), ckpt)  # keep final epoch (shortcut learned fast)
 
-    # Measure the tube-reliance gap on held-out positives.
     gap = tube_reliance_gap(model, index, cfg.data, device, batch_size=cfg.train.batch_size,
                             seed=cfg.seed)
     logger.info(f"tube reliance: {gap}")

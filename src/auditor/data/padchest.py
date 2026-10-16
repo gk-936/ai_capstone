@@ -79,7 +79,6 @@ def build_padchest_index(data_cfg: DataConfig, labels_csv: str, seed: int = 1337
     if max_rows is not None and len(df) > max_rows:
         df = df.sample(n=max_rows, random_state=seed).reset_index(drop=True)
 
-    # Patient-disjoint dfr/test split.
     rng = np.random.RandomState(seed)
     patients = np.sort(df["patient_id"].unique())
     rng.shuffle(patients)

@@ -125,8 +125,6 @@ def assert_patient_disjoint(index: SplitIndex) -> None:
             )
 
 
-# --- torch Dataset (imported lazily so the pure functions above need no torch) ----------
-
 def make_dataset(index: SplitIndex, split: str, data_cfg: DataConfig, train: bool):
     """Factory that builds a torch Dataset for a split (keeps torch import local)."""
     from auditor.data.torch_dataset import NIHDataset
